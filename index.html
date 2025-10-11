@@ -5,30 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>倒计时 - Countdown</title>
   <style>
-    body { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0f1724; color:white; font-family:sans-serif; }
-    .earn-card { background:#1f2937; padding:20px 40px; border-radius:15px; text-align:center; margin-bottom:20px; }
-    .earn-amount { font-size:2rem; color:#bfe6a8; }
-    .earn-status { font-size:1rem; color:#a0a0a0; margin-top:5px; }
-    .countdown { font-size:2rem; text-align:center; margin-bottom:20px; }
-    .segment { display:inline-block; margin:0 10px; }
-    .target { font-size:1.2rem; margin-top:10px; color:#a0a0a0; }
+    body { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0f1724; color:white; font-family:sans-serif; gap:20px; }
+    .card { background:#1f2937; padding:20px 40px; border-radius:15px; text-align:center; width:300px; }
+    .card-title { font-size:1.2rem; margin-bottom:10px; color:#a0a0a0; }
+    .card-value { font-size:2rem; color:#bfe6a8; margin-bottom:5px; }
+    .card-status { font-size:1rem; color:#a0a0a0; }
+    .segment { display:inline-block; margin:0 5px; font-size:1.5rem; }
   </style>
 </head>
 <body>
 
-  <div class="earn-card">
-    <div class="earn-amount" id="earn-amount">¥0.00</div>
-    <div class="earn-status" id="earn-status">状态加载中...</div>
+  <div class="card">
+    <div class="card-title">今日已赚</div>
+    <div class="card-value" id="earn-amount">¥0.00</div>
+    <div class="card-status" id="earn-status">状态加载中...</div>
   </div>
 
-  <div class="countdown">
-    <div class="segment"><span id="days">0</span>天</div>
-    <div class="segment"><span id="hours">00</span>时</div>
-    <div class="segment"><span id="minutes">00</span>分</div>
-    <div class="segment"><span id="seconds">00</span>秒</div>
+  <div class="card">
+    <div class="card-title">倒计时至社保缴满20年</div>
+    <div class="card-value countdown">
+      <span class="segment" id="days">0</span>天
+      <span class="segment" id="hours">00</span>时
+      <span class="segment" id="minutes">00</span>分
+      <span class="segment" id="seconds">00</span>秒
+    </div>
   </div>
 
-  <div class="target">距社保缴满20年(2032年5月)</div>
+  <div class="card">
+    <div class="card-title">剩余工作时间</div>
+    <div class="card-status" id="remaining-work">剩余工作时间计算中...</div>
+  </div>
 
   <script>
     const targetTime = new Date('2032-05-31T18:00:00').getTime();
@@ -43,7 +49,6 @@
         document.getElementById('hours').textContent = '00';
         document.getElementById('minutes').textContent = '00';
         document.getElementById('seconds').textContent = '00';
-        clearInterval(countdownTimer);
         return;
       }
       const s = Math.floor(diff/1000);
@@ -57,12 +62,10 @@
       document.getElementById('seconds').textContent = pad(seconds);
     }
 
-    updateCountdown();
-    const countdownTimer = setInterval(updateCountdown, 1000);
-
     const earnRatePerSecond = 0.055;
     const earnAmountEl = document.getElementById('earn-amount');
     const earnStatusEl = document.getElementById('earn-status');
+    const remainingWorkEl = document.getElementById('remaining-work');
 
     const holidays2025 = [
       '2025-01-01','2025-01-02','2025-01-03',
@@ -76,50 +79,60 @@
 
     const makeUpWorkdays2025 = ['2025-10-11'];
 
-    function formatMoney(n){return Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
-
-    function startEarning(){
-      function updateEarning(){
-        const now = new Date();
-        const todayStr = now.toISOString().slice(0,10);
-        const dayOfWeek = now.getDay();
-        const hours = now.getHours();
-
-        if(holidays2025.includes(todayStr)){
-          earnAmountEl.textContent = '¥0.00';
-          earnStatusEl.textContent = '节假日不计时';
-          return;
-        }
-
-        if((dayOfWeek===0 || dayOfWeek===6) && !makeUpWorkdays2025.includes(todayStr)){
-          earnAmountEl.textContent = '¥0.00';
-          earnStatusEl.textContent = '休息日不计时';
-          return;
-        }
-
-        if(hours<9){
-          earnAmountEl.textContent = '¥0.00';
-          earnStatusEl.textContent = '今日未开始计时';
-          return;
-        }
-        if(hours>=18){
-          const totalEarn = 32400*earnRatePerSecond;
-          earnAmountEl.textContent = formatMoney(totalEarn);
-          earnStatusEl.textContent = '今日已结束';
-          return;
-        }
-
-        const startTs = new Date(now.getFullYear(),now.getMonth(),now.getDate(),9,0,0,0).getTime();
-        const elapsedSeconds = (Date.now() - startTs)/1000;
-        const amount = elapsedSeconds*earnRatePerSecond;
-        earnAmountEl.textContent = formatMoney(amount);
-        earnStatusEl.textContent = '工作日 09:00–18:00 自动计时，每秒 ¥0.055';
-      }
-      updateEarning();
-      setInterval(updateEarning, 1000);
+    function isWorkDay(date){
+      const dayStr = date.toISOString().slice(0,10);
+      const dayOfWeek = date.getDay();
+      if(holidays2025.includes(dayStr)) return false;
+      if((dayOfWeek === 0 || dayOfWeek === 6) && !makeUpWorkdays2025.includes(dayStr)) return false;
+      return true;
     }
 
-    startEarning();
+    function updateEarningAndWork(){
+      const now = new Date();
+      const hour = now.getHours();
+
+      // 今日收益
+      if(isWorkDay(now) && hour >= 9 && hour < 18){
+        const startTs = new Date(now.getFullYear(), now.getMonth(), now.getDate(),9,0,0,0).getTime();
+        const elapsedSeconds = (Date.now() - startTs)/1000;
+        const amount = elapsedSeconds * earnRatePerSecond;
+        earnAmountEl.textContent = amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+        earnStatusEl.textContent = '工作日 09:00–18:00 自动计时';
+      } else {
+        earnAmountEl.textContent = '¥0.00';
+        if(!isWorkDay(now)) earnStatusEl.textContent = '休息日或节假日不计时';
+        else if(hour < 9) earnStatusEl.textContent = '今日未开始';
+        else earnStatusEl.textContent = '今日已结束';
+      }
+
+      // 剩余工作时间倒计时
+      let totalSeconds = 0;
+      let current = new Date();
+      while(current <= new Date('2032-05-31T18:00:00')){
+        if(isWorkDay(current)) totalSeconds += 9*3600;
+        current.setDate(current.getDate() + 1);
+      }
+
+      if(isWorkDay(now)){
+        const workStartTs = new Date(now.getFullYear(), now.getMonth(), now.getDate(),9,0,0,0).getTime();
+        const workEndTs = new Date(now.getFullYear(), now.getMonth(), now.getDate(),18,0,0,0).getTime();
+        if(Date.now() >= workStartTs && Date.now() <= workEndTs){
+          totalSeconds -= Math.floor((Date.now() - workStartTs)/1000);
+        } else if(Date.now() > workEndTs){
+          totalSeconds -= 9*3600;
+        }
+      }
+
+      const hours = Math.floor(totalSeconds/3600);
+      const minutes = Math.floor((totalSeconds%3600)/60);
+      const seconds = Math.floor(totalSeconds%60);
+      remainingWorkEl.textContent = `${hours}小时 ${minutes}分 ${seconds}秒`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+    updateEarningAndWork();
+    setInterval(updateEarningAndWork, 1000);
   </script>
 </body>
 </html>
