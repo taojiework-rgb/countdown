@@ -6,19 +6,29 @@
   <title>倒计时 - Countdown</title>
   <style>
     body { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0f1724; color:white; font-family:sans-serif; }
-    .countdown { font-size:2rem; text-align:center; margin-top:20px; }
+    .earn-card { background:#1f2937; padding:20px 40px; border-radius:15px; text-align:center; margin-bottom:20px; }
+    .earn-amount { font-size:2rem; color:#bfe6a8; }
+    .earn-status { font-size:1rem; color:#a0a0a0; margin-top:5px; }
+    .countdown { font-size:2rem; text-align:center; margin-bottom:20px; }
     .segment { display:inline-block; margin:0 10px; }
-    .target { font-size:1.2rem; margin-bottom:10px; color:#a0a0a0; }
+    .target { font-size:1.2rem; margin-top:10px; color:#a0a0a0; }
   </style>
 </head>
 <body>
-  <div class="target">距离社保缴满20年(2032年5月)还剩余</div>
+
+  <div class="earn-card">
+    <div class="earn-amount" id="earn-amount">¥0.00</div>
+    <div class="earn-status" id="earn-status">状态加载中...</div>
+  </div>
+
   <div class="countdown">
     <div class="segment"><span id="days">0</span>天</div>
     <div class="segment"><span id="hours">00</span>时</div>
     <div class="segment"><span id="minutes">00</span>分</div>
     <div class="segment"><span id="seconds">00</span>秒</div>
   </div>
+
+  <div class="target">距社保缴满20年(2032年5月)</div>
 
   <script>
     const targetTime = new Date('2032-05-31T18:00:00').getTime();
@@ -33,7 +43,7 @@
         document.getElementById('hours').textContent = '00';
         document.getElementById('minutes').textContent = '00';
         document.getElementById('seconds').textContent = '00';
-        clearInterval(timer);
+        clearInterval(countdownTimer);
         return;
       }
       const s = Math.floor(diff/1000);
@@ -48,7 +58,68 @@
     }
 
     updateCountdown();
-    const timer = setInterval(updateCountdown, 1000);
+    const countdownTimer = setInterval(updateCountdown, 1000);
+
+    const earnRatePerSecond = 0.055;
+    const earnAmountEl = document.getElementById('earn-amount');
+    const earnStatusEl = document.getElementById('earn-status');
+
+    const holidays2025 = [
+      '2025-01-01','2025-01-02','2025-01-03',
+      '2025-01-29','2025-01-30','2025-01-31','2025-02-01','2025-02-02','2025-02-03','2025-02-04',
+      '2025-04-05','2025-04-06','2025-04-07',
+      '2025-05-01','2025-05-02','2025-05-03',
+      '2025-06-22','2025-06-23','2025-06-24',
+      '2025-09-06','2025-09-07','2025-09-08',
+      '2025-10-01','2025-10-02','2025-10-03','2025-10-04','2025-10-05','2025-10-06','2025-10-07'
+    ];
+
+    const makeUpWorkdays2025 = ['2025-10-11'];
+
+    function formatMoney(n){return Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+    function startEarning(){
+      function updateEarning(){
+        const now = new Date();
+        const todayStr = now.toISOString().slice(0,10);
+        const dayOfWeek = now.getDay();
+        const hours = now.getHours();
+
+        if(holidays2025.includes(todayStr)){
+          earnAmountEl.textContent = '¥0.00';
+          earnStatusEl.textContent = '节假日不计时';
+          return;
+        }
+
+        if((dayOfWeek===0 || dayOfWeek===6) && !makeUpWorkdays2025.includes(todayStr)){
+          earnAmountEl.textContent = '¥0.00';
+          earnStatusEl.textContent = '休息日不计时';
+          return;
+        }
+
+        if(hours<9){
+          earnAmountEl.textContent = '¥0.00';
+          earnStatusEl.textContent = '今日未开始计时';
+          return;
+        }
+        if(hours>=18){
+          const totalEarn = 32400*earnRatePerSecond;
+          earnAmountEl.textContent = formatMoney(totalEarn);
+          earnStatusEl.textContent = '今日已结束';
+          return;
+        }
+
+        const startTs = new Date(now.getFullYear(),now.getMonth(),now.getDate(),9,0,0,0).getTime();
+        const elapsedSeconds = (Date.now() - startTs)/1000;
+        const amount = elapsedSeconds*earnRatePerSecond;
+        earnAmountEl.textContent = formatMoney(amount);
+        earnStatusEl.textContent = '工作日 09:00–18:00 自动计时，每秒 ¥0.055';
+      }
+      updateEarning();
+      setInterval(updateEarning, 1000);
+    }
+
+    startEarning();
   </script>
 </body>
 </html>
