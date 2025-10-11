@@ -33,7 +33,7 @@
 
   <div class="card">
     <div class="card-title">剩余工作时间</div>
-    <div class="card-status" id="remaining-work">剩余工作时间计算中...</div>
+    <div class="card-value" id="remaining-work">剩余工作时间计算中...</div>
   </div>
 
   <script>
@@ -97,7 +97,7 @@
         const elapsedSeconds = (Date.now() - startTs)/1000;
         const amount = elapsedSeconds * earnRatePerSecond;
         earnAmountEl.textContent = amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-        earnStatusEl.textContent = '工作日 09:00–18:00 自动计时';
+        earnStatusEl.textContent = '工作日 09:00–18:00 自动计时，每秒 ¥0.055';
       } else {
         earnAmountEl.textContent = '¥0.00';
         if(!isWorkDay(now)) earnStatusEl.textContent = '休息日或节假日不计时';
@@ -127,6 +127,7 @@
       const minutes = Math.floor((totalSeconds%3600)/60);
       const seconds = Math.floor(totalSeconds%60);
       remainingWorkEl.textContent = `${hours}小时 ${minutes}分 ${seconds}秒`;
+      remainingWorkEl.style.fontSize = '2rem';
     }
 
     updateCountdown();
