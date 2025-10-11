@@ -6,10 +6,10 @@
   <title>倒计时 - Countdown</title>
   <style>
     body { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0f1724; color:white; font-family:sans-serif; gap:20px; }
-    .card { background:#1f2937; padding:20px 40px; border-radius:15px; text-align:center; width:300px; }
-    .card-title { font-size:1.2rem; margin-bottom:10px; color:#a0a0a0; }
-    .card-value { font-size:2rem; color:#bfe6a8; margin-bottom:5px; }
-    .card-status { font-size:1rem; color:#a0a0a0; }
+    .card { background:#1f2937; padding:30px 50px; border-radius:15px; text-align:center; width:360px; min-height:120px; }
+    .card-title { font-size:1.2rem; margin-bottom:10px; color:#a0a0a0; white-space:nowrap; }
+    .card-value { font-size:2rem; color:#bfe6a8; margin-bottom:5px; white-space:nowrap; }
+    .card-status { font-size:1rem; color:#a0a0a0; white-space:nowrap; }
     .segment { display:inline-block; margin:0 5px; font-size:1.5rem; }
   </style>
 </head>
@@ -91,13 +91,12 @@
       const now = new Date();
       const hour = now.getHours();
 
-      // 今日收益
       if(isWorkDay(now) && hour >= 9 && hour < 18){
         const startTs = new Date(now.getFullYear(), now.getMonth(), now.getDate(),9,0,0,0).getTime();
         const elapsedSeconds = (Date.now() - startTs)/1000;
         const amount = elapsedSeconds * earnRatePerSecond;
         earnAmountEl.textContent = amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-        earnStatusEl.textContent = '工作日 09:00–18:00 自动计时，每秒 ¥0.055';
+        earnStatusEl.textContent = '工作日 09:00–18:00 自动计时';
       } else {
         earnAmountEl.textContent = '¥0.00';
         if(!isWorkDay(now)) earnStatusEl.textContent = '休息日或节假日不计时';
@@ -105,7 +104,6 @@
         else earnStatusEl.textContent = '今日已结束';
       }
 
-      // 剩余工作时间倒计时
       let totalSeconds = 0;
       let current = new Date();
       while(current <= new Date('2032-05-31T18:00:00')){
