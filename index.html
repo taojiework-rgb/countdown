@@ -4,358 +4,51 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>倒计时 - Countdown</title>
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#0f1724;
-      --card:#0b1220;
-      --accent:#7c3aed;
-      --muted:#9aa4b2;
-      --glass: rgba(255,255,255,0.04);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;}
-    body{
-      margin:0;
-      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: radial-gradient(1200px 600px at 10% 10%, rgba(124,58,237,0.12), transparent),
-                  radial-gradient(800px 400px at 90% 90%, rgba(14,165,233,0.06), transparent),
-                  var(--bg);
-      color:#e6eef6;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
-    .container{
-      width:100%;
-      max-width:920px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border:1px solid rgba(255,255,255,0.04);
-      border-radius:14px;
-      padding:28px;
-      box-shadow: 0 10px 30px rgba(2,6,23,0.6);
-    }
-    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
-    .logo{
-      width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);
-      display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:white;box-shadow:0 6px 18px rgba(124,58,237,0.18)
-    }
-    h1{font-size:20px;margin:0}
-    p.lead{margin:0;color:var(--muted);font-size:13px}
-
-    .grid{display:grid;grid-template-columns:1fr 360px;gap:20px}
-    @media (max-width:880px){.grid{grid-template-columns:1fr}}
-
-    .card{background:var(--card);padding:16px;border-radius:10px;border:1px solid var(--glass)}
-
-    /* countdown display */
-    .countdown{display:flex;gap:12px;justify-content:center;align-items:center;padding:20px}
-    .segment{flex:1;min-width:64px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;padding:12px;text-align:center}
-    .num{font-size:34px;font-weight:800;letter-spacing:1px}
-    .label{font-size:12px;color:var(--muted);margin-top:6px}
-
-    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 12px;border-radius:8px;color:inherit;cursor:pointer}
-    button.primary{background:linear-gradient(90deg,var(--accent),#06b6d4);border:none;color:white}
-    button.ghost{background:transparent;border:1px dashed rgba(255,255,255,0.04)}
-
-    .form-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-    input[type="datetime-local"], input[type="text"]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
-    small{color:var(--muted)}
-
-    footer{margin-top:14px;color:var(--muted);font-size:13px}
-
-    .settings{display:flex;flex-direction:column}
-    .preset-list{display:flex;gap:8px;flex-wrap:wrap}
-    .preset{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
-
-    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:#0a1622;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)}
+    body { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0f1724; color:white; font-family:sans-serif; }
+    .countdown { font-size:2rem; text-align:center; margin-top:20px; }
+    .segment { display:inline-block; margin:0 10px; }
+    .target { font-size:1.2rem; margin-bottom:10px; color:#a0a0a0; }
   </style>
 </head>
 <body>
-  <div class="container" role="main">
-    <header>
-      <div class="logo">倒计</div>
-      <div>
-        <h1>倒计时网页</h1>
-        <p class="lead">输入目标时间，开始倒计时。支持保存与预设，响应式设计。</p>
-      </div>
-    </header>
-
-    <div class="grid">
-      <section class="card">
-        <div id="display" aria-live="polite">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div>
-              <strong id="targetLabel">目标时间：—</strong>
-              <div style="color:var(--muted);font-size:13px">本地时区：<span id="tzName"></span></div>
-            </div>
-            <div style="text-align:right;color:var(--muted);font-size:13px">状态：<span id="status">未开始</span></div>
-          </div>
-
-          <div class="countdown" id="countdown">
-            <div class="segment"><div class="num" id="days">0</div><div class="label">天</div></div>
-            <div class="segment"><div class="num" id="hours">00</div><div class="label">小时</div></div>
-            <div class="segment"><div class="num" id="minutes">00</div><div class="label">分钟</div></div>
-            <div class="segment"><div class="num" id="seconds">00</div><div class="label">秒</div></div>
-          </div>
-
-          <div class="controls">
-            <button class="primary" id="startBtn">开始</button>
-            <button id="pauseBtn">暂停</button>
-            <button id="resetBtn" class="ghost">重置</button>
-            <button id="copyBtn">复制为链接</button>
-          </div>
-        </div>
-
-        <footer>提示：倒计时会保存在本地浏览器（localStorage）。</footer>
-      </section>
-
-      <aside class="card settings" aria-label="设置">
-        <div>
-          <label for="targetInput">目标时间</label>
-          <input id="targetInput" type="datetime-local" aria-describedby="targetHelp" />
-          <div style="height:8px"></div>
-          <div class="form-row">
-            <button id="saveBtn">保存当前目标</button>
-            <button id="clearBtn" class="ghost">清除保存</button>
-          </div>
-          <small id="targetHelp">选择日期和时间（本地时区）</small>
-        </div>
-
-        <hr style="border:none;height:12px">
-
-        <div style="margin-top:8px">
-          <label>常用预设</label>
-          <div class="preset-list" id="presets">
-            <div class="preset" data-days="1">24 小时</div>
-            <div class="preset" data-days="7">7 天</div>
-            <div class="preset" data-days="30">30 天</div>
-            <div class="preset" data-days="365">1 年</div>
-          </div>
-        </div>
-
-        <div style="margin-top:12px">
-          <label for="labelInput">倒计时标题（可选）</label>
-          <input id="labelInput" type="text" placeholder="例如：项目交付 / 生日" />
-        </div>
-
-        <div style="margin-top:12px;display:flex;gap:8px">
-          <button id="loadSaved">加载已保存</button>
-          <button id="exportBtn">导出 JSON</button>
-        </div>
-
-        <div style="margin-top:12px;color:var(--muted);font-size:13px">提示：如果页面关闭，已保存的倒计时会在下次打开时继续。</div>
-      </aside>
-    </div>
+  <div class="target">目标时间: 2031年12月31日 23:59:59</div>
+  <div class="countdown">
+    <div class="segment"><span id="days">0</span>天</div>
+    <div class="segment"><span id="hours">00</span>时</div>
+    <div class="segment"><span id="minutes">00</span>分</div>
+    <div class="segment"><span id="seconds">00</span>秒</div>
   </div>
 
   <script>
-    // 简单倒计时逻辑
-    const startBtn = document.getElementById('startBtn');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const loadSavedBtn = document.getElementById('loadSaved');
-    const exportBtn = document.getElementById('exportBtn');
+    const targetTime = new Date('2031-12-31T23:59:59').getTime();
 
-    const targetInput = document.getElementById('targetInput');
-    const labelInput = document.getElementById('labelInput');
-    const tzName = document.getElementById('tzName');
-    const targetLabel = document.getElementById('targetLabel');
-    const statusEl = document.getElementById('status');
+    function pad(num){return String(num).padStart(2,'0');}
 
-    const daysEl = document.getElementById('days');
-    const hoursEl = document.getElementById('hours');
-    const minutesEl = document.getElementById('minutes');
-    const secondsEl = document.getElementById('seconds');
-
-    const presets = document.getElementById('presets');
-
-    let targetTime = null; // timestamp ms
-    let title = '';
-    let timer = null;
-    let running = false;
-
-    // show timezone
-    try{
-      tzName.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || '本地';
-    }catch(e){tzName.textContent = '本地';}
-
-    function pad(num){return String(num).padStart(2,'0')}
-
-    function updateDisplay(diffMs){
-      if(diffMs <= 0){
-        daysEl.textContent = '0'; hoursEl.textContent='00'; minutesEl.textContent='00'; secondsEl.textContent='00';
-        statusEl.textContent = '已结束';
-        running = false;
-        stopTimer();
+    function updateCountdown(){
+      const now = Date.now();
+      const diff = targetTime - now;
+      if(diff <= 0){
+        document.getElementById('days').textContent = '0';
+        document.getElementById('hours').textContent = '00';
+        document.getElementById('minutes').textContent = '00';
+        document.getElementById('seconds').textContent = '00';
+        clearInterval(timer);
         return;
       }
-      const s = Math.floor(diffMs/1000);
-      const days = Math.floor(s / 86400);
-      const hours = Math.floor((s % 86400) / 3600);
-      const minutes = Math.floor((s % 3600) / 60);
-      const seconds = s % 60;
-      daysEl.textContent = String(days);
-      hoursEl.textContent = pad(hours);
-      minutesEl.textContent = pad(minutes);
-      secondsEl.textContent = pad(seconds);
+      const s = Math.floor(diff/1000);
+      const days = Math.floor(s/86400);
+      const hours = Math.floor((s%86400)/3600);
+      const minutes = Math.floor((s%3600)/60);
+      const seconds = s%60;
+      document.getElementById('days').textContent = days;
+      document.getElementById('hours').textContent = pad(hours);
+      document.getElementById('minutes').textContent = pad(minutes);
+      document.getElementById('seconds').textContent = pad(seconds);
     }
 
-    function tick(){
-      if(!targetTime) return;
-      const diff = targetTime - Date.now();
-      updateDisplay(diff);
-    }
-
-    function startTimer(){
-      if(!targetTime){alert('请先设置目标时间');return}
-      if(running) return;
-      running = true;
-      statusEl.textContent = '进行中';
-      tick();
-      timer = setInterval(tick, 250);
-      saveState();
-    }
-    function stopTimer(){
-      running = false;
-      statusEl.textContent = '已暂停';
-      if(timer){clearInterval(timer);timer=null}
-      saveState();
-    }
-
-    function resetTimer(){
-      targetTime = null; title='';
-      targetInput.value = '';
-      labelInput.value = '';
-      targetLabel.textContent = '目标时间：—';
-      daysEl.textContent='0';hoursEl.textContent='00';minutesEl.textContent='00';secondsEl.textContent='00';
-      statusEl.textContent = '未开始';
-      stopTimer();
-      localStorage.removeItem('countdown');
-    }
-
-    function saveState(){
-      const obj = {targetTime, title};
-      localStorage.setItem('countdown', JSON.stringify(obj));
-    }
-
-    function loadState(){
-      const raw = localStorage.getItem('countdown');
-      if(!raw) return false;
-      try{
-        const obj = JSON.parse(raw);
-        if(obj && obj.targetTime){
-          targetTime = obj.targetTime;
-          title = obj.title||'';
-          labelInput.value = title;
-          targetLabel.textContent = '目标时间：' + new Date(targetTime).toLocaleString();
-          targetInput.value = toLocalInputValue(new Date(targetTime));
-          startTimer();
-          return true;
-        }
-      }catch(e){console.warn(e)}
-      return false;
-    }
-
-    function toLocalInputValue(d){
-      // produce yyyy-MM-ddThh:mm (datetime-local format)
-      const pad2 = n=>String(n).padStart(2, '0');
-      return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'T'+pad2(d.getHours())+':'+pad2(d.getMinutes());
-    }
-
-    // events
-    startBtn.addEventListener('click', ()=>{
-      // parse input
-      if(targetInput.value){
-        const t = new Date(targetInput.value);
-        targetTime = t.getTime();
-        title = labelInput.value.trim();
-        targetLabel.textContent = '目标时间：' + t.toLocaleString();
-      }
-      startTimer();
-    });
-
-    pauseBtn.addEventListener('click', ()=>{
-      stopTimer();
-    });
-
-    resetBtn.addEventListener('click', ()=>{
-      if(confirm('确认重置并清除保存？')) resetTimer();
-    });
-
-    saveBtn.addEventListener('click', ()=>{
-      if(!targetInput.value){alert('请先设置目标时间');return}
-      const t = new Date(targetInput.value);
-      targetTime = t.getTime();
-      title = labelInput.value.trim();
-      saveState();
-      targetLabel.textContent = '目标时间：' + t.toLocaleString();
-      alert('已保存至本地');
-    });
-
-    clearBtn.addEventListener('click', ()=>{
-      if(confirm('确认清除保存的数据？')){localStorage.removeItem('countdown');alert('已清除')}
-    });
-
-    presets.addEventListener('click', (e)=>{
-      const p = e.target.closest('.preset');
-      if(!p) return;
-      const days = Number(p.dataset.days||0);
-      const dt = new Date(Date.now() + days*24*3600*1000);
-      targetInput.value = toLocalInputValue(dt);
-    });
-
-    loadSavedBtn.addEventListener('click', ()=>{
-      if(!loadState()) alert('没有找到已保存的倒计时');
-    });
-
-    exportBtn.addEventListener('click', ()=>{
-      const raw = localStorage.getItem('countdown');
-      if(!raw){alert('没有数据可导出');return}
-      const blob = new Blob([raw], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download='countdown.json'; a.click(); URL.revokeObjectURL(url);
-    });
-
-    copyBtn.addEventListener('click', ()=>{
-      if(!targetTime){alert('没有设置目标时间');return}
-      const params = new URLSearchParams({t: String(targetTime), title: title||''});
-      const url = location.origin + location.pathname + '?' + params.toString();
-      navigator.clipboard?.writeText(url).then(()=>alert('已复制链接（可分享）')).catch(()=>prompt('复制失败，请手动复制链接：', url));
-    });
-
-    // read query params
-    (function(){
-      const qp = new URLSearchParams(location.search);
-      if(qp.has('t')){
-        const tt = Number(qp.get('t'));
-        if(!isNaN(tt) && tt>Date.now()){
-          targetTime = tt;
-          title = qp.get('title')||'';
-          labelInput.value = title;
-          targetLabel.textContent = '目标时间：' + new Date(targetTime).toLocaleString();
-          startTimer();
-        }
-      }
-    })();
-
-    // try load saved on start
-    window.addEventListener('load', ()=>{
-      loadState();
-    });
-
-    // save before unload
-    window.addEventListener('beforeunload', ()=>{
-      saveState();
-    });
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
   </script>
 </body>
 </html>
-
