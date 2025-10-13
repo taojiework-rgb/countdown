@@ -11,7 +11,7 @@
     }
     .card {
       background:#1f2937; padding:30px 50px; border-radius:18px; text-align:center;
-      margin:15px; box-shadow:0 0 12px rgba(255,255,255,0.1); width:360px;
+      margin:15px; box-shadow:0 0 12px rgba(255,255,255,0.1); width:380px;
     }
     .amount { font-size:2.2rem; color:#bfe6a8; }
     .status { font-size:1rem; color:#a0a0a0; margin-top:8px; }
@@ -29,11 +29,11 @@
     <div class="status" id="earn-status">状态加载中...</div>
   </div>
 
-  <!-- 倒计时 -->
+  <!-- 倒计时至社保缴满20年 -->
   <div class="card">
     <div class="title">至社保缴满20年(2032年5月)</div>
     <div class="countdown">
-      <div class="segment"><span id="days">0</span>天</div>
+      <div class="segment" id="ymd">0年0月0天</div>
       <div class="segment"><span id="hours">00</span>时</div>
       <div class="segment"><span id="minutes">00</span>分</div>
       <div class="segment"><span id="seconds">00</span>秒</div>
@@ -47,73 +47,80 @@
   </div>
 
   <script>
-    // 🎯 倒计时目标时间
-    const targetTime = new Date('2032-05-31T18:00:00').getTime();
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function formatMoney(n){ return Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
-    function pad(n){return String(n).padStart(2,'0');}
-    function formatMoney(n){return Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+    // ----------------- 第二张卡片倒计时（年-月-日-时-分-秒） -----------------
+    const targetTime = new Date('2032-05-31T18:00:00');
 
-    // 倒计时逻辑
     function updateCountdown(){
-      const now = Date.now();
-      let diff = targetTime - now;
-      if(diff < 0) diff = 0;
-      const s = Math.floor(diff / 1000);
-      const days = Math.floor(s / 86400);
-      const hours = Math.floor((s % 86400) / 3600);
-      const minutes = Math.floor((s % 3600) / 60);
-      const seconds = s % 60;
-      document.getElementById('days').textContent = days;
+      const now = new Date();
+      if(now >= targetTime){
+        document.getElementById('ymd').textContent = '0年0月0天';
+        document.getElementById('hours').textContent = '00';
+        document.getElementById('minutes').textContent = '00';
+        document.getElementById('seconds').textContent = '00';
+        return;
+      }
+
+      let years = targetTime.getFullYear() - now.getFullYear();
+      let months = targetTime.getMonth() - now.getMonth();
+      let days = targetTime.getDate() - now.getDate();
+      let hours = targetTime.getHours() - now.getHours();
+      let minutes = targetTime.getMinutes() - now.getMinutes();
+      let seconds = targetTime.getSeconds() - now.getSeconds();
+
+      if(seconds < 0){ seconds += 60; minutes -= 1; }
+      if(minutes < 0){ minutes += 60; hours -= 1; }
+      if(hours < 0){ hours += 24; days -= 1; }
+      if(days < 0){
+        const prevMonth = new Date(targetTime.getFullYear(), targetTime.getMonth(), 0);
+        days += prevMonth.getDate();
+        months -= 1;
+      }
+      if(months < 0){ months += 12; years -= 1; }
+
+      document.getElementById('ymd').textContent = `${years}年${months}月${days}天`;
       document.getElementById('hours').textContent = pad(hours);
       document.getElementById('minutes').textContent = pad(minutes);
       document.getElementById('seconds').textContent = pad(seconds);
     }
-
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
-    // 📅 节假日与补班（不需要排除，已经删去）
-    // 不再使用节假日与周末排除
-
-    // 💰 今日已赚逻辑
+    // ----------------- 今日已赚 -----------------
     const earnAmountEl = document.getElementById('earn-amount');
     const earnStatusEl = document.getElementById('earn-status');
     const earnRatePerSecond = 0.055;
-
     let lastDate = new Date().toISOString().slice(0,10);
     let dailyEarn = parseFloat(localStorage.getItem('dailyEarn')) || 0;
 
     function updateEarningAndWork(){
       const now = new Date();
       const todayStr = now.toISOString().slice(0,10);
-      const dayOfWeek = now.getDay();
       const hours = now.getHours();
 
-      // 跨天清零
       if(todayStr !== lastDate){
         dailyEarn = 0;
         lastDate = todayStr;
-        localStorage.setItem('dailyEarn', dailyEarn);  // 保存清零后的状态
+        localStorage.setItem('dailyEarn', dailyEarn);
       }
 
-      // 每秒增加
       if(hours >= 9 && hours < 18){
         const startTs = new Date(now.getFullYear(),now.getMonth(),now.getDate(),9,0,0,0).getTime();
         const elapsedSeconds = (Date.now() - startTs)/1000;
         dailyEarn = elapsedSeconds * earnRatePerSecond;
-        localStorage.setItem('dailyEarn', dailyEarn);  // 更新localStorage中的收入
+        localStorage.setItem('dailyEarn', dailyEarn);
       }
 
       earnAmountEl.textContent = formatMoney(dailyEarn);
       earnStatusEl.textContent = '工作日 09:00–18:00 自动计时';
     }
-
     setInterval(updateEarningAndWork, 1000);
     updateEarningAndWork();
 
-    // 🕒 距离广电卡到期剩余天数（2025年11月7日）
+    // ----------------- 第三张卡片（保持原样） -----------------
     const remainingEl = document.getElementById('remaining-worktime');
-
     function calculateRemainingDays(){
       const now = new Date();
       const end = new Date('2025-11-07T18:00:00');
@@ -131,7 +138,6 @@
       const days = calculateRemainingDays();
       remainingEl.textContent = `${days}天`;
     }
-
     setInterval(updateRemainingWorktime, 1000);
     updateRemainingWorktime();
   </script>
