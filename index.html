@@ -81,7 +81,7 @@
     const earnRatePerSecond = 0.055;
 
     let lastDate = new Date().toISOString().slice(0,10);
-    let dailyEarn = 0;
+    let dailyEarn = parseFloat(localStorage.getItem('dailyEarn')) || 0;
 
     function updateEarningAndWork(){
       const now = new Date();
@@ -93,9 +93,17 @@
       if(todayStr !== lastDate){
         dailyEarn = 0;
         lastDate = todayStr;
+        localStorage.setItem('dailyEarn', dailyEarn);  // 保存清零后的状态
       }
 
-      // 节假日不计时，去除该部分
+      // 每秒增加
+      if(hours >= 9 && hours < 18){
+        const startTs = new Date(now.getFullYear(),now.getMonth(),now.getDate(),9,0,0,0).getTime();
+        const elapsedSeconds = (Date.now() - startTs)/1000;
+        dailyEarn = elapsedSeconds * earnRatePerSecond;
+        localStorage.setItem('dailyEarn', dailyEarn);  // 更新localStorage中的收入
+      }
+
       earnAmountEl.textContent = formatMoney(dailyEarn);
       earnStatusEl.textContent = '工作日 09:00–18:00 自动计时';
     }
