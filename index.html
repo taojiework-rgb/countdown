@@ -40,9 +40,9 @@
     </div>
   </div>
 
-  <!-- 剩余工作时间 -->
+  <!-- 距离广电卡到期 -->
   <div class="card">
-    <div class="title">剩余工作时间</div>
+    <div class="title">距离广电卡到期(2025年11月7日)剩余</div>
     <div class="worktime" id="remaining-worktime">计算中...</div>
   </div>
 
@@ -72,17 +72,8 @@
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
-    // 📅 节假日与补班
-    const holidays2025 = [
-      '2025-01-01','2025-01-02','2025-01-03',
-      '2025-01-29','2025-01-30','2025-01-31','2025-02-01','2025-02-02','2025-02-03','2025-02-04',
-      '2025-04-05','2025-04-06','2025-04-07',
-      '2025-05-01','2025-05-02','2025-05-03',
-      '2025-06-22','2025-06-23','2025-06-24',
-      '2025-09-06','2025-09-07','2025-09-08',
-      '2025-10-01','2025-10-02','2025-10-03','2025-10-04','2025-10-05','2025-10-06','2025-10-07'
-    ];
-    const makeUpWorkdays2025 = ['2025-10-11']; // 补班日（字符串格式）
+    // 📅 节假日与补班（不需要排除，已经删去）
+    // 不再使用节假日与周末排除
 
     // 💰 今日已赚逻辑
     const earnAmountEl = document.getElementById('earn-amount');
@@ -104,67 +95,33 @@
         lastDate = todayStr;
       }
 
-      // 节假日排除
-      if(holidays2025.includes(todayStr)){
-        earnAmountEl.textContent = '¥0.00';
-        earnStatusEl.textContent = '节假日不计时';
-        return;
-      }
-
-      // 周末排除（除补班）
-      if((dayOfWeek === 0 || dayOfWeek === 6) && !makeUpWorkdays2025.includes(todayStr)){
-        earnAmountEl.textContent = '¥0.00';
-        earnStatusEl.textContent = '休息日不计时';
-        return;
-      }
-
-      // 工作时间判断
-      if(hours >= 9 && hours < 18){
-        const startTs = new Date(now.getFullYear(),now.getMonth(),now.getDate(),9,0,0,0).getTime();
-        const elapsedSeconds = (Date.now() - startTs)/1000;
-        dailyEarn = elapsedSeconds * earnRatePerSecond;
-        earnAmountEl.textContent = formatMoney(dailyEarn);
-        earnStatusEl.textContent = '工作日 09:00–18:00 自动计时';
-      } else if(hours >= 18){
-        earnAmountEl.textContent = formatMoney(32400 * earnRatePerSecond);
-        earnStatusEl.textContent = '今日已结束';
-      } else {
-        earnAmountEl.textContent = '¥0.00';
-        earnStatusEl.textContent = '今日未开始计时';
-      }
+      // 节假日不计时，去除该部分
+      earnAmountEl.textContent = formatMoney(dailyEarn);
+      earnStatusEl.textContent = '工作日 09:00–18:00 自动计时';
     }
 
     setInterval(updateEarningAndWork, 1000);
     updateEarningAndWork();
 
-    // 🕒 剩余工作时间（按每天9小时、工作日、排除节假日）
+    // 🕒 距离广电卡到期剩余天数（2025年11月7日）
     const remainingEl = document.getElementById('remaining-worktime');
 
-    function calculateRemainingWorkSeconds(){
+    function calculateRemainingDays(){
       const now = new Date();
-      const end = new Date('2032-05-31T18:00:00');
-      let totalSeconds = 0;
+      const end = new Date('2025-11-07T18:00:00');
+      let totalDays = 0;
       let current = new Date(now);
 
       while(current < end){
-        const dayStr = current.toISOString().slice(0,10);
-        const dayOfWeek = current.getDay();
-        if(!holidays2025.includes(dayStr)){
-          if((dayOfWeek !== 0 && dayOfWeek !== 6) || makeUpWorkdays2025.includes(dayStr)){
-            totalSeconds += 9 * 3600;
-          }
-        }
+        totalDays++;
         current.setDate(current.getDate()+1);
       }
-      return totalSeconds;
+      return totalDays;
     }
 
     function updateRemainingWorktime(){
-      const seconds = calculateRemainingWorkSeconds();
-      const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      const secs = seconds % 60;
-      remainingEl.textContent = `${hrs}小时 ${mins}分 ${secs}秒`;
+      const days = calculateRemainingDays();
+      remainingEl.textContent = `${days}天`;
     }
 
     setInterval(updateRemainingWorktime, 1000);
