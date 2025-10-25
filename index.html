@@ -22,7 +22,7 @@
       border-radius: 15px;
       text-align: center;
       box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      min-width: 320px;
+      min-width: 340px;
     }
     .card-title {
       font-size: 1.1rem;
@@ -34,7 +34,6 @@
       color: #bfe6a8;
     }
 
-    /* 圆形头像样式 */
     .photo {
       width: 160px;
       height: 160px;
@@ -49,8 +48,6 @@
       transform: scale(1.05);
       box-shadow: 0 0 35px rgba(191, 230, 168, 0.9);
     }
-
-    /* 底部文字 */
     .footer-text {
       font-size: 1.2rem;
       color: #bfe6a8;
@@ -80,12 +77,18 @@
     <div class="card-value" id="tv-remaining">计算中...</div>
   </div>
 
-  <!-- 底部圆形头像 + 签名 -->
+  <!-- 第四张卡片：距陶陶满18周岁还有 -->
+  <div class="card">
+    <div class="card-title">距陶陶满18周岁还有</div>
+    <div class="card-value" id="taotao-remaining">计算中...</div>
+  </div>
+
+  <!-- 底部头像与签名 -->
   <img src="myphoto.jpg" alt="我的头像" class="photo" />
   <div class="footer-text">陶陶理发</div>
 
   <script>
-    // 🕒 第一张卡片：已离职天数
+    // 🕒 第一张卡片：已离职
     const leaveStart = new Date('2025-10-24T00:00:00');
     function updateLeaveDays() {
       const now = new Date();
@@ -96,7 +99,7 @@
     updateLeaveDays();
     setInterval(updateLeaveDays, 600000);
 
-    // 🧮 第二张卡片：至社保缴满20年 (2032年5月)
+    // 🧮 第二张卡片：至社保缴满20年
     const targetTime = new Date('2032-05-31T18:00:00');
     function updateCountdown() {
       const now = new Date();
@@ -104,20 +107,17 @@
         document.getElementById('countdown').textContent = '已达成';
         return;
       }
-
       let years = targetTime.getFullYear() - now.getFullYear();
       let months = targetTime.getMonth() - now.getMonth();
-
       if (months < 0) {
         months += 12;
         years -= 1;
       }
-
       const formatted = `${years} 年 ${months} 月`;
       document.getElementById('countdown').textContent = formatted;
     }
     updateCountdown();
-    setInterval(updateCountdown, 60 * 60 * 1000);
+    setInterval(updateCountdown, 3600000);
 
     // 📺 第三张卡片：距离广电卡到期
     const tvExpire = new Date('2025-11-07T00:00:00');
@@ -130,6 +130,28 @@
     }
     updateTV();
     setInterval(updateTV, 60000);
+
+    // 👶 第四张卡片：距陶陶满18周岁还有
+    const taotaoBirth = new Date('2019-03-17T23:58:00');
+    const taotao18 = new Date('2037-03-17T23:58:00');
+
+    function updateTaotao() {
+      const now = new Date();
+      let diff = taotao18 - now;
+      if (diff < 0) diff = 0;
+
+      const totalSeconds = Math.floor(diff / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      const formatted = `${days} 天 ${hours} 时 ${minutes} 分 ${seconds} 秒`;
+      document.getElementById('taotao-remaining').textContent = formatted;
+    }
+
+    updateTaotao();
+    setInterval(updateTaotao, 1000);
   </script>
 </body>
 </html>
