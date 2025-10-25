@@ -3,71 +3,78 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>社保与离职计时</title>
+  <title>个人时间状态面板</title>
   <style>
     body {
-      display:flex; flex-direction:column; justify-content:center; align-items:center;
-      min-height:100vh; background:#0f1724; color:white; font-family:sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #0f1724;
+      color: white;
+      font-family: sans-serif;
+      gap: 25px;
     }
     .card {
-      background:#1f2937; padding:30px 50px; border-radius:18px; text-align:center;
-      margin:15px; box-shadow:0 0 12px rgba(255,255,255,0.1); width:380px;
+      background: #1f2937;
+      padding: 25px 50px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      min-width: 320px;
     }
-    .amount { font-size:2.2rem; color:#bfe6a8; }
-    .status { font-size:1rem; color:#a0a0a0; margin-top:8px; }
-    .title { font-size:1.2rem; color:#a0a0a0; margin-bottom:10px; }
-    .countdown, .worktime { font-size:2rem; color:#bfe6a8; margin-top:5px; }
-    .segment { display:inline-block; margin:0 5px; }
+    .card-title {
+      font-size: 1.1rem;
+      color: #a0a0a0;
+      margin-bottom: 10px;
+    }
+    .card-value {
+      font-size: 2rem;
+      color: #bfe6a8;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 已离职天数 -->
+  <!-- 第一张卡片：已离职 -->
   <div class="card">
-    <div class="title">已离职</div>
-    <div class="amount" id="leave-days">0 天</div>
-    <div class="status">从今天开始计算</div>
+    <div class="card-title">已离职</div>
+    <div class="card-value" id="leave-days">0 天</div>
   </div>
 
-  <!-- 倒计时至社保缴满20年 -->
+  <!-- 第二张卡片：社保缴满20年 -->
   <div class="card">
-    <div class="title">至社保缴满20年(2032年5月)</div>
-    <div class="countdown">
-      <div class="segment" id="ymd">0年0月0天</div>
-      <div class="segment"><span id="hours">00</span>时</div>
-      <div class="segment"><span id="minutes">00</span>分</div>
-      <div class="segment"><span id="seconds">00</span>秒</div>
-    </div>
+    <div class="card-title">至社保缴满20年 (2032年5月)</div>
+    <div class="card-value" id="countdown">计算中...</div>
   </div>
 
-  <!-- 距离广电卡到期 -->
+  <!-- 第三张卡片：广电卡到期 -->
   <div class="card">
-    <div class="title">距离广电卡到期(2025年11月7日)剩余</div>
-    <div class="worktime" id="remaining-worktime">计算中...</div>
+    <div class="card-title">距离广电卡到期 (2025年11月7日) 剩余</div>
+    <div class="card-value" id="tv-remaining">计算中...</div>
   </div>
 
   <script>
+    // 🕒 第一张卡片：已离职天数
+    const leaveStart = new Date('2025-10-24T00:00:00');
+    function updateLeaveDays() {
+      const now = new Date();
+      const diffMs = now - leaveStart;
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      document.getElementById('leave-days').textContent = `${days} 天`;
+    }
+    updateLeaveDays();
+    setInterval(updateLeaveDays, 600000);
+
+    // 🧮 第二张卡片：至社保缴满20年 (2032年5月)
+    const targetTime = new Date('2032-05-31T18:00:00');
     function pad(n){ return String(n).padStart(2,'0'); }
 
-    // ----------------- 第一张卡片：已离职天数 -----------------
-    const leaveStart = new Date(); // 从今天开始
-    function updateLeaveDays(){
-      const now = new Date();
-      const diffDays = Math.floor((now - leaveStart) / (1000 * 60 * 60 * 24));
-      document.getElementById('leave-days').textContent = `${diffDays} 天`;
-    }
-    setInterval(updateLeaveDays, 1000 * 60 * 60); // 每小时更新一次
-    updateLeaveDays();
-
-    // ----------------- 第二张卡片倒计时（年-月-日-时-分-秒） -----------------
-    const targetTime = new Date('2032-05-31T18:00:00');
     function updateCountdown(){
       const now = new Date();
-      if(now >= targetTime){
-        document.getElementById('ymd').textContent = '0年0月0天';
-        document.getElementById('hours').textContent = '00';
-        document.getElementById('minutes').textContent = '00';
-        document.getElementById('seconds').textContent = '00';
+      if(now > targetTime){
+        document.getElementById('countdown').textContent = '已达成';
         return;
       }
 
@@ -88,35 +95,23 @@
       }
       if(months < 0){ months += 12; years -= 1; }
 
-      document.getElementById('ymd').textContent = `${years}年${months}月${days}天`;
-      document.getElementById('hours').textContent = pad(hours);
-      document.getElementById('minutes').textContent = pad(minutes);
-      document.getElementById('seconds').textContent = pad(seconds);
+      const formatted = `${years}年 ${months}月 ${days}天 ${pad(hours)}时 ${pad(minutes)}分 ${pad(seconds)}秒`;
+      document.getElementById('countdown').textContent = formatted;
     }
-    setInterval(updateCountdown, 1000);
     updateCountdown();
+    setInterval(updateCountdown, 1000);
 
-    // ----------------- 第三张卡片：距离广电卡到期 -----------------
-    const remainingEl = document.getElementById('remaining-worktime');
-    function calculateRemainingDays(){
+    // 📺 第三张卡片：距离广电卡到期
+    const tvExpire = new Date('2025-11-07T00:00:00');
+    function updateTV(){
       const now = new Date();
-      const end = new Date('2025-11-07T18:00:00');
-      let totalDays = 0;
-      let current = new Date(now);
-      while(current < end){
-        totalDays++;
-        current.setDate(current.getDate()+1);
-      }
-      return totalDays;
+      let diff = tvExpire - now;
+      if(diff < 0) diff = 0;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      document.getElementById('tv-remaining').textContent = `${days} 天`;
     }
-
-    function updateRemainingWorktime(){
-      const days = calculateRemainingDays();
-      remainingEl.textContent = `${days}天`;
-    }
-    setInterval(updateRemainingWorktime, 1000 * 60 * 60);
-    updateRemainingWorktime();
+    updateTV();
+    setInterval(updateTV, 60000);
   </script>
-
 </body>
 </html>
