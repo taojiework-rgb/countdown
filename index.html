@@ -85,13 +85,7 @@
     <div class="card-value" id="countdown">计算中...</div>
   </div>
 
-  <!-- 第三张卡片：广电卡到期 -->
-  <div class="card">
-    <div class="card-title">距离广电卡到期 (2025年11月7日) 剩余</div>
-    <div class="card-value" id="tv-remaining">计算中...</div>
-  </div>
-
-  <!-- 第四张卡片：距陶陶满18周岁还有 -->
+  <!-- 第三张卡片（现在是第四）：距陶陶满18周岁还有 -->
   <div class="card">
     <div class="card-title">距陶陶满18周岁还有</div>
     <div class="card-value" id="taotao-remaining">计算中...</div>
@@ -133,19 +127,7 @@
     updateCountdown();
     setInterval(updateCountdown, 3600000);
 
-    // 📺 第三张卡片：距离广电卡到期
-    const tvExpire = new Date('2025-11-07T00:00:00');
-    function updateTV(){
-      const now = new Date();
-      let diff = tvExpire - now;
-      if(diff < 0) diff = 0;
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      document.getElementById('tv-remaining').textContent = `${days} 天`;
-    }
-    updateTV();
-    setInterval(updateTV, 60000);
-
-    // 👶 第四张卡片：距陶陶满18周岁还有（年-月-日-时-分-秒）
+    // 👶 第三张卡片：距陶陶满18周岁还有（年-月-日-时-分-秒）
     const taotao18 = new Date('2037-03-17T23:58:00');
 
     function updateTaotao() {
