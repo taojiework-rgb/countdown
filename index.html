@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>社保缴满20年倒计时</title>
+  <title>社保与离职计时</title>
   <style>
     body {
       display:flex; flex-direction:column; justify-content:center; align-items:center;
@@ -22,11 +22,11 @@
 </head>
 <body>
 
-  <!-- 今日已赚 -->
+  <!-- 已离职天数 -->
   <div class="card">
-    <div class="title">今日已赚</div>
-    <div class="amount" id="earn-amount">¥0.00</div>
-    <div class="status" id="earn-status">状态加载中...</div>
+    <div class="title">已离职</div>
+    <div class="amount" id="leave-days">0 天</div>
+    <div class="status">从今天开始计算</div>
   </div>
 
   <!-- 倒计时至社保缴满20年 -->
@@ -48,11 +48,19 @@
 
   <script>
     function pad(n){ return String(n).padStart(2,'0'); }
-    function formatMoney(n){ return Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+    // ----------------- 第一张卡片：已离职天数 -----------------
+    const leaveStart = new Date(); // 从今天开始
+    function updateLeaveDays(){
+      const now = new Date();
+      const diffDays = Math.floor((now - leaveStart) / (1000 * 60 * 60 * 24));
+      document.getElementById('leave-days').textContent = `${diffDays} 天`;
+    }
+    setInterval(updateLeaveDays, 1000 * 60 * 60); // 每小时更新一次
+    updateLeaveDays();
 
     // ----------------- 第二张卡片倒计时（年-月-日-时-分-秒） -----------------
     const targetTime = new Date('2032-05-31T18:00:00');
-
     function updateCountdown(){
       const now = new Date();
       if(now >= targetTime){
@@ -88,45 +96,13 @@
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
-    // ----------------- 今日已赚 -----------------
-    const earnAmountEl = document.getElementById('earn-amount');
-    const earnStatusEl = document.getElementById('earn-status');
-    const earnRatePerSecond = 0.055;
-    let lastDate = new Date().toISOString().slice(0,10);
-    let dailyEarn = parseFloat(localStorage.getItem('dailyEarn')) || 0;
-
-    function updateEarningAndWork(){
-      const now = new Date();
-      const todayStr = now.toISOString().slice(0,10);
-      const hours = now.getHours();
-
-      if(todayStr !== lastDate){
-        dailyEarn = 0;
-        lastDate = todayStr;
-        localStorage.setItem('dailyEarn', dailyEarn);
-      }
-
-      if(hours >= 9 && hours < 18){
-        const startTs = new Date(now.getFullYear(),now.getMonth(),now.getDate(),9,0,0,0).getTime();
-        const elapsedSeconds = (Date.now() - startTs)/1000;
-        dailyEarn = elapsedSeconds * earnRatePerSecond;
-        localStorage.setItem('dailyEarn', dailyEarn);
-      }
-
-      earnAmountEl.textContent = formatMoney(dailyEarn);
-      earnStatusEl.textContent = '工作日 09:00–18:00 自动计时';
-    }
-    setInterval(updateEarningAndWork, 1000);
-    updateEarningAndWork();
-
-    // ----------------- 第三张卡片（保持原样） -----------------
+    // ----------------- 第三张卡片：距离广电卡到期 -----------------
     const remainingEl = document.getElementById('remaining-worktime');
     function calculateRemainingDays(){
       const now = new Date();
       const end = new Date('2025-11-07T18:00:00');
       let totalDays = 0;
       let current = new Date(now);
-
       while(current < end){
         totalDays++;
         current.setDate(current.getDate()+1);
@@ -138,7 +114,7 @@
       const days = calculateRemainingDays();
       remainingEl.textContent = `${days}天`;
     }
-    setInterval(updateRemainingWorktime, 1000);
+    setInterval(updateRemainingWorktime, 1000 * 60 * 60);
     updateRemainingWorktime();
   </script>
 
