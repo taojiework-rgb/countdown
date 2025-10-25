@@ -65,41 +65,30 @@
       document.getElementById('leave-days').textContent = `${days} 天`;
     }
     updateLeaveDays();
-    setInterval(updateLeaveDays, 600000);
+    setInterval(updateLeaveDays, 600000); // 每10分钟更新一次
 
     // 🧮 第二张卡片：至社保缴满20年 (2032年5月)
     const targetTime = new Date('2032-05-31T18:00:00');
-    function pad(n){ return String(n).padStart(2,'0'); }
-
-    function updateCountdown(){
+    function updateCountdown() {
       const now = new Date();
-      if(now > targetTime){
+      if (now > targetTime) {
         document.getElementById('countdown').textContent = '已达成';
         return;
       }
 
       let years = targetTime.getFullYear() - now.getFullYear();
       let months = targetTime.getMonth() - now.getMonth();
-      let days = targetTime.getDate() - now.getDate();
-      let hours = targetTime.getHours() - now.getHours();
-      let minutes = targetTime.getMinutes() - now.getMinutes();
-      let seconds = targetTime.getSeconds() - now.getSeconds();
 
-      if(seconds < 0){ seconds += 60; minutes -= 1; }
-      if(minutes < 0){ minutes += 60; hours -= 1; }
-      if(hours < 0){ hours += 24; days -= 1; }
-      if(days < 0){
-        const prevMonth = new Date(targetTime.getFullYear(), targetTime.getMonth(), 0);
-        days += prevMonth.getDate();
-        months -= 1;
+      if (months < 0) {
+        months += 12;
+        years -= 1;
       }
-      if(months < 0){ months += 12; years -= 1; }
 
-      const formatted = `${years}年 ${months}月 ${days}天 ${pad(hours)}时 ${pad(minutes)}分 ${pad(seconds)}秒`;
+      const formatted = `${years} 年 ${months} 月`;
       document.getElementById('countdown').textContent = formatted;
     }
     updateCountdown();
-    setInterval(updateCountdown, 1000);
+    setInterval(updateCountdown, 60 * 60 * 1000); // 每小时更新一次
 
     // 📺 第三张卡片：距离广电卡到期
     const tvExpire = new Date('2025-11-07T00:00:00');
