@@ -10,7 +10,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       background: #0f1724;
       color: white;
       font-family: sans-serif;
@@ -32,6 +32,31 @@
     .card-value {
       font-size: 2rem;
       color: #bfe6a8;
+    }
+
+    /* 圆形头像样式 */
+    .photo {
+      width: 160px;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 50%;
+      box-shadow: 0 0 25px rgba(191, 230, 168, 0.6);
+      border: 3px solid #bfe6a8;
+      margin: 30px 0 10px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .photo:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 35px rgba(191, 230, 168, 0.9);
+    }
+
+    /* 底部文字 */
+    .footer-text {
+      font-size: 1.2rem;
+      color: #bfe6a8;
+      text-shadow: 0 0 8px rgba(191, 230, 168, 0.8);
+      margin-bottom: 20px;
+      letter-spacing: 1px;
     }
   </style>
 </head>
@@ -55,6 +80,10 @@
     <div class="card-value" id="tv-remaining">计算中...</div>
   </div>
 
+  <!-- 底部圆形头像 + 签名 -->
+  <img src="myphoto.jpg" alt="我的头像" class="photo" />
+  <div class="footer-text">陶陶理发</div>
+
   <script>
     // 🕒 第一张卡片：已离职天数
     const leaveStart = new Date('2025-10-24T00:00:00');
@@ -65,7 +94,7 @@
       document.getElementById('leave-days').textContent = `${days} 天`;
     }
     updateLeaveDays();
-    setInterval(updateLeaveDays, 600000); // 每10分钟更新一次
+    setInterval(updateLeaveDays, 600000);
 
     // 🧮 第二张卡片：至社保缴满20年 (2032年5月)
     const targetTime = new Date('2032-05-31T18:00:00');
@@ -88,7 +117,7 @@
       document.getElementById('countdown').textContent = formatted;
     }
     updateCountdown();
-    setInterval(updateCountdown, 60 * 60 * 1000); // 每小时更新一次
+    setInterval(updateCountdown, 60 * 60 * 1000);
 
     // 📺 第三张卡片：距离广电卡到期
     const tvExpire = new Date('2025-11-07T00:00:00');
