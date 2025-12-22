@@ -18,36 +18,36 @@
     }
     .card {
       background: #1f2937;
-      padding: 25px 50px;
+      padding: 25px 30px;
       border-radius: 15px;
-      text-align: center;
+      text-align: left;
       box-shadow: 0 0 15px rgba(0,0,0,0.3);
       min-width: 340px;
+      max-width: 560px;
     }
     .card-title {
       font-size: 1.1rem;
       color: #a0a0a0;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      text-align: center;
     }
     .card-value {
       font-size: 2rem;
       color: #bfe6a8;
+      text-align: center;
     }
-
-    /* 第四张卡片动画效果 */
+    /* 陶陶倒计时 - 动画 */
     #taotao-remaining {
       font-size: 2.5rem;
       font-weight: bold;
       color: #bfe6a8;
       animation: pulse 2s infinite ease-in-out;
     }
-
     @keyframes pulse {
       0%   { text-shadow: 0 0 8px rgba(191,230,168,0.5); transform: scale(1); }
       50%  { text-shadow: 0 0 20px rgba(191,230,168,1);   transform: scale(1.05); }
       100% { text-shadow: 0 0 8px rgba(191,230,168,0.5); transform: scale(1); }
     }
-
     .photo {
       width: 160px;
       height: 160px;
@@ -69,35 +69,160 @@
       margin-bottom: 20px;
       letter-spacing: 1px;
     }
+
+    /* ======== 报告表单 ======== */
+    .report-form-label {
+      display: block;
+      color: #a0a0a0;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+    .report-form-input {
+      width: 100%;
+      background: #1f2937;
+      color: #bfe6a8;
+      border: 1px solid #bfe6a8;
+      border-radius: 6px;
+      padding: 6px 8px;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .report-form-input:focus {
+      outline: none;
+      border-color: #def5c5;
+      box-shadow: 0 0 8px rgba(191,230,168,0.7);
+    }
+    .report-textarea {
+      width: 100%;
+      min-height: 80px;
+      background: #1f2937;
+      color: #bfe6a8;
+      border: 1px solid #bfe6a8;
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 12px;
+      resize: vertical;
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .report-textarea:focus {
+      outline: none;
+      border-color: #def5c5;
+      box-shadow: 0 0 8px rgba(191,230,168,0.7);
+    }
+    .save-btn {
+      display: block;
+      margin: 0 auto;
+      background: #bfe6a8;
+      color: #0f1724;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 20px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .save-btn:hover {
+      background: #def5c5;
+      transform: translateY(-2px);
+    }
+
+    /* ======== 已保存的日报列表 ======== */
+    #reports-container {
+      width: 100%;
+      max-width: 560px;
+    }
+    .report-card {
+      background: #2a3b4c;
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin-bottom: 12px;
+      color: #e0e0e0;
+    }
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+    .report-header .report-date { color: #bfe6a8; font-weight: 600; }
+    .report-header .report-hours { color: #bfe6a8; }
+    .report-body div { margin-bottom: 6px; }
+    .report-body strong { color: #a0a0a0; }
+    .report-actions {
+      text-align: right;
+      margin-top: 8px;
+    }
+    .report-actions button {
+      background: #bfe6a8;
+      color: #0f1724;
+      border: none;
+      border-radius: 5px;
+      padding: 4px 10px;
+      margin-left: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .report-actions button:hover {
+      background: #def5c5;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 第一张卡片：已入职天数 -->
+  <!-- 已入职天数 -->
   <div class="card">
     <div class="card-title">已入职天数</div>
     <div class="card-value" id="work-days">0 天</div>
   </div>
 
-  <!-- 第二张卡片：社保缴满20年 -->
+  <!-- 社保缴满20年倒计时 -->
   <div class="card">
     <div class="card-title">至社保缴满20年 (2032年5月)</div>
     <div class="card-value" id="countdown">计算中...</div>
   </div>
 
-  <!-- 第三张卡片（现在是第四）：距陶陶满18周岁还有 -->
+  <!-- 陶陶满18岁倒计时 -->
   <div class="card">
     <div class="card-title">距陶陶满18周岁还有</div>
     <div class="card-value" id="taotao-remaining">计算中...</div>
   </div>
+
+  <!-- ======== 添加/编辑日报表单 ======== -->
+  <div class="card" id="daily-report-form">
+    <div class="card-title">添加/编辑日报</div>
+
+    <label class="report-form-label" for="report-date-input">日期</label>
+    <input type="date" id="report-date-input" class="report-form-input" />
+
+    <label class="report-form-label" for="report-hours-input">工时（小时）</label>
+    <input type="number" id="report-hours-input" class="report-form-input"
+           step="0.5" min="0" placeholder="如 8" />
+
+    <textarea id="work-content" class="report-textarea"
+              placeholder="当日工作（必填）"></textarea>
+
+    <textarea id="issue-content" class="report-textarea"
+              placeholder="存在问题（选填）"></textarea>
+
+    <button class="save-btn" id="save-report">保存</button>
+  </div>
+
+  <!-- ======== 已保存的日报列表 ======== -->
+  <div id="reports-container"></div>
 
   <!-- 底部头像与签名 -->
   <img src="myphoto.jpg" alt="我的头像" class="photo" />
   <div class="footer-text">陶陶理发</div>
 
   <script>
-    /* 🕒 第一张卡片：已入职天数 */
-    const workStart = new Date('2025-11-10T08:00:00');   // 入职日期
+    /* ============= 1️⃣ 已入职天数 ============= */
+    const workStart = new Date('2025-11-10T00:00:00'); // 入职日期
     function updateWorkDays() {
       const now = new Date();
       const diffMs = now - workStart;
@@ -105,36 +230,30 @@
       document.getElementById('work-days').textContent = `${days} 天`;
     }
     updateWorkDays();
-    // 每 10 分钟更新一次（不需要太频繁）
-    setInterval(updateWorkDays, 600000);
+    setInterval(updateWorkDays, 600000); // 10 分钟刷新一次
 
-    /* 🧮 第二张卡片：至社保缴满20年 */
-    const targetTime = new Date('2032-05-31T18:00:00');
+    /* ============= 2️⃣ 社保 20 年倒计时 ============= */
+    const targetSocial = new Date('2032-05-31T18:00:00');
     function updateCountdown() {
       const now = new Date();
-      if (now > targetTime) {
+      if (now > targetSocial) {
         document.getElementById('countdown').textContent = '已达成';
         return;
       }
-      let years = targetTime.getFullYear() - now.getFullYear();
-      let months = targetTime.getMonth() - now.getMonth();
-      if (months < 0) {
-        months += 12;
-        years -= 1;
-      }
+      let years = targetSocial.getFullYear() - now.getFullYear();
+      let months = targetSocial.getMonth() - now.getMonth();
+      if (months < 0) { months += 12; years -= 1; }
       document.getElementById('countdown').textContent = `${years} 年 ${months} 月`;
     }
     updateCountdown();
-    setInterval(updateCountdown, 3600000);
+    setInterval(updateCountdown, 3600000); // 每小时刷新
 
-    /* 👶 第三张卡片：距陶陶满18周岁还有（年-月-日-时-分-秒） */
+    /* ============= 3️⃣ 陶陶满 18 周岁倒计时 ============= */
     const taotao18 = new Date('2037-03-17T23:58:00');
-
     function updateTaotao() {
       const now = new Date();
       let diff = taotao18 - now;
       if (diff < 0) diff = 0;
-
       let totalSeconds = Math.floor(diff / 1000);
 
       const years = Math.floor(totalSeconds / (365.25 * 24 * 3600));
@@ -155,9 +274,205 @@
       const formatted = `${years} 年 ${months} 月 ${days} 天 ${hours} 时 ${minutes} 分 ${seconds} 秒`;
       document.getElementById('taotao-remaining').textContent = formatted;
     }
-
     updateTaotao();
     setInterval(updateTaotao, 1000);
+
+    /* ============= 4️⃣ 报告（日报）系统 ============= */
+    const dateInput   = document.getElementById('report-date-input');
+    const hoursInput  = document.getElementById('report-hours-input');
+    const workInput   = document.getElementById('work-content');
+    const issueInput  = document.getElementById('issue-content');
+    const saveBtn     = document.getElementById('save-report');
+    const reportsContainer = document.getElementById('reports-container');
+
+    // 默认值为今天
+    const formatYMD = d => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${dd}`;
+    };
+    const todayYMD = formatYMD(new Date());
+    dateInput.value = todayYMD;
+
+    // 用来把 YYYY‑MM‑DD 转成更友好的 “2025年11月12日 星期五”
+    const formatDisplayDate = iso => {
+      const d = new Date(iso);
+      return d.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      });
+    };
+
+    // ==== 内存中缓存的所有报告（键：YYYY-MM-DD） ====
+    let reports = {};            // { '2025-11-12': {date, hours, work, issue, savedAt} }
+    let editingKey = null;       // null 表示新建；若为 “report-2025‑11‑12” 则处于编辑状态
+
+    // 读取 localStorage 中的所有报告
+    const loadReports = () => {
+      reports = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('report-')) {
+          const date = key.slice(7); // 去掉前缀
+          try {
+            const obj = JSON.parse(localStorage.getItem(key));
+            if (!obj.date) obj.date = date; // 防止缺失字段
+            reports[date] = obj;
+          } catch (e) {
+            console.warn('报告解析错误', key, e);
+          }
+        }
+      }
+    };
+
+    // 渲染报告列表（倒序显示）
+    const renderReports = () => {
+      reportsContainer.innerHTML = '';
+      const dates = Object.keys(reports).sort((a,b)=> a < b ? 1 : -1); // 最新在前
+      if (dates.length === 0) {
+        const empty = document.createElement('p');
+        empty.textContent = '暂无日报记录';
+        empty.style.textAlign = 'center';
+        empty.style.color = '#a0a0a0';
+        reportsContainer.appendChild(empty);
+        return;
+      }
+
+      dates.forEach(dateStr => {
+        const data = reports[dateStr];
+        const card = document.createElement('div');
+        card.className = 'report-card';
+
+        // header（日期 + 工时）
+        const header = document.createElement('div');
+        header.className = 'report-header';
+        header.innerHTML = `
+          <span class="report-date">${formatDisplayDate(dateStr)}</span>
+          <span class="report-hours">工时：${data.hours ?? 0} 小时</span>
+        `;
+        card.appendChild(header);
+
+        // body（工作 + 问题）
+        const body = document.createElement('div');
+        body.className = 'report-body';
+        body.innerHTML = `
+          <div><strong>当日工作：</strong><p>${data.work || ''}</p></div>
+          <div><strong>存在问题：</strong><p>${data.issue || ''}</p></div>
+        `;
+        card.appendChild(body);
+
+        // actions（编辑 / 删除）
+        const actions = document.createElement('div');
+        actions.className = 'report-actions';
+        const editBtn = document.createElement('button');
+        editBtn.textContent = '编辑';
+        editBtn.className = 'edit-btn';
+        editBtn.dataset.date = dateStr;
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '删除';
+        delBtn.className = 'delete-btn';
+        delBtn.dataset.date = dateStr;
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        card.appendChild(actions);
+
+        reportsContainer.appendChild(card);
+      });
+    };
+
+    // 把表单内容保存（新建或更新）
+    const saveReport = () => {
+      const date = dateInput.value.trim(); // yyyy-mm-dd
+      if (!date) { alert('请选择日期'); return; }
+
+      const hours = parseFloat(hoursInput.value) || 0;
+      const work = workInput.value.trim();
+      const issue = issueInput.value.trim();
+
+      if (!work) {
+        alert('请填写“当日工作”。');
+        workInput.focus();
+        return;
+      }
+
+      const key = `report-${date}`;
+      const payload = { date, hours, work, issue, savedAt: new Date().toISOString() };
+
+      // 若是编辑且改了日期，需要把旧键删掉
+      if (editingKey && editingKey !== key) {
+        localStorage.removeItem(editingKey);
+      }
+
+      localStorage.setItem(key, JSON.stringify(payload));
+
+      // 收尾：清除编辑状态、恢复按钮文字、清空表单（日期回到今天）
+      editingKey = null;
+      saveBtn.textContent = '保存';
+      clearForm();
+
+      // 重新读取并渲染
+      loadReports();
+      renderReports();
+    };
+
+    const clearForm = () => {
+      dateInput.value = todayYMD;
+      hoursInput.value = '';
+      workInput.value = '';
+      issueInput.value = '';
+    };
+
+    // 把选中的报告加载进表单以便编辑
+    const editReport = dateStr => {
+      const data = reports[dateStr];
+      if (!data) return;
+      editingKey = `report-${dateStr}`;
+      dateInput.value   = data.date;
+      hoursInput.value  = data.hours ?? '';
+      workInput.value   = data.work ?? '';
+      issueInput.value  = data.issue ?? '';
+      saveBtn.textContent = '更新';
+    };
+
+    // 删除报告
+    const deleteReport = dateStr => {
+      if (!confirm(`确认删除 ${formatDisplayDate(dateStr)} 的日报吗？`)) return;
+      const key = `report-${dateStr}`;
+      localStorage.removeItem(key);
+      if (editingKey === key) {
+        editingKey = null;
+        clearForm();
+        saveBtn.textContent = '保存';
+      }
+      loadReports();
+      renderReports();
+    };
+
+    // ==== 事件绑定 ====
+    saveBtn.addEventListener('click', saveReport);
+    // 采用事件委托统一处理编辑 / 删除按钮
+    reportsContainer.addEventListener('click', e => {
+      if (e.target.classList.contains('edit-btn')) {
+        editReport(e.target.dataset.date);
+      } else if (e.target.classList.contains('delete-btn')) {
+        deleteReport(e.target.dataset.date);
+      }
+    });
+
+    // 页面首次加载
+    loadReports();
+    renderReports();
+
+    // 每分钟检查一次“是否已经跨天”，若未在编辑状态则把日期输入自动回到今天
+    setInterval(() => {
+      const today = formatYMD(new Date());
+      if (!editingKey && dateInput.value !== today) {
+        dateInput.value = today;
+      }
+    }, 60000);
   </script>
 </body>
 </html>
