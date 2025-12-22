@@ -2,138 +2,67 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>个人日志记录板</title>
+<title>日志 → 自动写入本地 Excel</title>
 <style>
   :root{
-    --bg-main:#0f1724;
-    --bg-card:#1f2937;
-    --bg-list:#2a3b4c;
-    --c-text:#e0e0e0;
-    --c-title:#a0a0a0;
-    --c-value:#bfe6a8;
-    --accent:#bfe6a8;
-    --accent-hover:#def5c5;
+    --bg-main:#0f1724; --bg-card:#1f2937; --bg-list:#2a3b4c;
+    --c-text:#e0e0e0;   --c-title:#a0a0a0; --c-val:#bfe6a8;
+    --accent:#bfe6a8;   --accent-hover:#def5c5;
   }
-  body{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    min-height:100vh;
-    background:var(--bg-main);
-    color:var(--c-text);
-    font-family:sans-serif;
-    gap:25px;
-    padding:20px;
-  }
-  .card{
-    background:var(--bg-card);
-    padding:25px 30px;
-    border-radius:15px;
-    box-shadow:0 0 15px rgba(0,0,0,0.3);
-    width:100%;
-    max-width:560px;
-  }
-  .card-title{
-    font-size:1.2rem;
-    color:var(--c-title);
-    text-align:center;
-    margin-bottom:12px;
-  }
-  .save-btn{
-    display:block;
-    margin:0 auto;
-    background:var(--accent);
-    color:var(--bg-main);
-    border:none;
-    border-radius:6px;
-    padding:8px 20px;
-    font-size:0.95rem;
-    cursor:pointer;
-    transition:background .2s,transform .2s;
-  }
-  .save-btn:hover{
-    background:var(--accent-hover);
-    transform:translateY(-2px);
-  }
-  .form-label{
-    display:block;
-    margin-bottom:4px;
-    color:var(--c-title);
-    font-size:0.95rem;
-  }
+  body{display:flex;flex-direction:column;align-items:center;
+        min-height:100vh;background:var(--bg-main);color:var(--c-text);
+        font-family:sans-serif;gap:25px;padding:20px;}
+  .card{background:var(--bg-card);padding:25px 30px;
+        border-radius:15px;box-shadow:0 0 15px rgba(0,0,0,.3);
+        width:100%;max-width:560px;}
+  .card-title{font-size:1.2rem;color:var(--c-title);
+              text-align:center;margin-bottom:12px;}
+  .btn{display:block;margin:0 auto;background:var(--accent);
+       color:var(--bg-main);border:none;border-radius:6px;
+       padding:8px 20px;font-size:.95rem;cursor:pointer;
+       transition:background .2s,transform .2s;}
+  .btn:hover{background:var(--accent-hover);transform:translateY(-2px);}
+  .form-label{display:block;margin-bottom:4px;color:var(--c-title);
+              font-size:.95rem;}
   .form-input,.form-textarea{
-    width:100%;
-    background:var(--bg-card);
-    color:var(--accent);
-    border:1px solid var(--accent);
-    border-radius:6px;
-    padding:6px 8px;
-    margin-bottom:12px;
-    font-size:0.95rem;
-    transition:border-color .2s,box-shadow .2s;
-  }
-  .form-input:focus,
-  .form-textarea:focus{
-    outline:none;
-    border-color:var(--accent-hover);
-    box-shadow:0 0 8px rgba(191,230,168,.7);
-  }
-  .form-textarea{
-    min-height:80px;
-    resize:vertical;
-  }
-
-  #log-list{
-    width:100%;
-    max-width:560px;
-  }
-  .log-item{
-    background:var(--bg-list);
-    border-radius:12px;
-    padding:15px 20px;
-    margin-bottom:12px;
-    color:var(--c-text);
-  }
-  .log-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:baseline;
-    font-size:1rem;
-    margin-bottom:8px;
-  }
+        width:100%;background:var(--bg-card);color:var(--accent);
+        border:1px solid var(--accent);border-radius:6px;
+        padding:6px 8px;margin-bottom:12px;font-size:.95rem;
+        transition:border-color .2s,box-shadow .2s;}
+  .form-input:focus,.form-textarea:focus{
+        outline:none;border-color:var(--accent-hover);
+        box-shadow:0 0 8px rgba(191,230,168,.7);}
+  .form-textarea{min-height:80px;resize:vertical;}
+  #log-list{width:100%;max-width:560px;}
+  .log-item{background:var(--bg-list);border-radius:12px;
+            padding:15px 20px;margin-bottom:12px;color:var(--c-text);}
+  .log-header{display:flex;justify-content:space-between;
+            align-items:baseline;font-size:1rem;margin-bottom:8px;}
   .log-header .log-date{color:var(--accent);font-weight:600;}
   .log-header .log-hours{color:var(--accent);}
-  .log-section{
-    margin-bottom:6px;
-  }
-  .log-section strong{
-    color:var(--c-title);
-  }
-  .log-actions{
-    text-align:right;
-    margin-top:8px;
-  }
+  .log-section{margin-bottom:6px;}
+  .log-section strong{color:var(--c-title);}
+  .log-actions{text-align:right;margin-top:8px;}
   .log-actions button{
-    background:var(--accent);
-    color:var(--bg-main);
-    border:none;
-    border-radius:5px;
-    padding:4px 10px;
-    margin-left:6px;
-    font-size:0.85rem;
-    cursor:pointer;
-    transition:background .2s;
-  }
-  .log-actions button:hover{
-    background:var(--accent-hover);
-  }
+        background:var(--accent);color:var(--bg-main);
+        border:none;border-radius:5px;padding:4px 10px;
+        margin-left:6px;font-size:.85rem;cursor:pointer;
+        transition:background .2s;}
+  .log-actions button:hover{background:var(--accent-hover);}
 </style>
 </head>
 <body>
 
-<!-- ======== 添加 / 编辑日志表单 ======== -->
+<!-- ======== ① 打开/创建 Excel 文件（首轮授权） ======== -->
+<div class="card" id="file-access-card">
+  <div class="card-title">打开或创建 Excel 文件（首次授权）</div>
+  <button class="btn" id="choose-file">打开/创建 Excel</button>
+  <p id="file-info" style="margin-top:10px;color:var(--c-title);font-size:.9rem;"></p>
+</div>
+
+<!-- ======== ② 添加/编辑日志表单 ======== -->
 <div class="card" id="log-form">
-  <div class="card-title">添加/编辑日志</div>
+  <div class="card-title">添加 / 编辑日志</div>
 
   <label class="form-label" for="log-date">日期</label>
   <input type="date" id="log-date" class="form-input">
@@ -141,107 +70,137 @@
   <label class="form-label" for="log-hours">工时（小时）</label>
   <input type="number" id="log-hours" class="form-input" step="0.5" min="0" placeholder="如 8">
 
-  <label class="form-label" for="log-work">工作内容</label>
-  <textarea id="log-work" class="form-textarea" placeholder="今天的工作（必填）"></textarea>
+  <label class="form-label" for="log-work">工作内容（必填）</label>
+  <textarea id="log-work" class="form-textarea" placeholder="今天的工作..."></textarea>
 
-  <label class="form-label" for="log-personal">个人内容</label>
-  <textarea id="log-personal" class="form-textarea" placeholder="个人想法、生活记录等（选填）"></textarea>
+  <label class="form-label" for="log-personal">个人内容（选填）</label>
+  <textarea id="log-personal" class="form-textarea" placeholder="生活、感想..."></textarea>
 
-  <button class="save-btn" id="save-log">保存</button>
+  <button class="btn" id="save-log">保存</button>
 </div>
 
-<!-- ======== 已保存的日志列表 ======== -->
+<!-- ======== ③ 已保存的日志列表（仅用于展示） ======== -->
 <div id="log-list"></div>
 
+<!-- ======== ④ 传统下载按钮（当浏览器不支持文件系统时显示） ======== -->
+<div class="card" id="fallback-card" style="display:none;">
+  <div class="card-title">导出为 Excel（不支持自动写入）</div>
+  <button class="btn" id="export-xlsx">导出为 Excel (.xlsx)</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-/* ========= 常量与工具函数 ========= */
+/*=============================================================
+   0️⃣ 常量 & 工具函数
+=============================================================*/
+const PREFIX = 'log-';
+const todayYMD = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;})();
 const dateInput   = document.getElementById('log-date');
 const hoursInput  = document.getElementById('log-hours');
 const workInput   = document.getElementById('log-work');
 const personalInput = document.getElementById('log-personal');
 const saveBtn     = document.getElementById('save-log');
 const listDiv     = document.getElementById('log-list');
-
-const todayYMD = (()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
 dateInput.value = todayYMD;
 
-// 把 ISO 日期转为 “2025年11月12日 星期五”
-function formatDisplay(dateStr){
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+let logs = {};                // 内存缓存：{ '2025-12-01': {...} }
+let editingKey = null;       // null → 新增；非 null → 正在编辑的键
+
+/*======================== IndexedDB 用来持久化文件句柄 ========================*/
+let db; // IndexedDB 实例
+function openMetaDB(){
+  return new Promise((resolve,reject)=>{
+    const request = indexedDB.open('logMetaDB',1);
+    request.onupgradeneeded = e=> {
+      const db = e.target.result;
+      db.createObjectStore('meta'); // 用来放文件句柄
+    };
+    request.onsuccess = e=> { db = e.target.result; resolve(db); };
+    request.onerror = e=> reject(e.target.error);
+  });
+}
+async function saveFileHandle(handle){
+  const db = await openMetaDB();
+  const tx = db.transaction('meta','readwrite');
+  tx.objectStore('meta').put(handle,'excelHandle');
+  return tx.complete;
+}
+async function loadFileHandle(){
+  const db = await openMetaDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction('meta','readonly');
+    const req = tx.objectStore('meta').get('excelHandle');
+    req.onsuccess = e=> resolve(e.target.result);
+    req.onerror = e=> reject(e.target.error);
+  });
+}
+async function clearFileHandle(){
+  const db = await openMetaDB();
+  const tx = db.transaction('meta','readwrite');
+  tx.objectStore('meta').delete('excelHandle');
+  return tx.complete;
 }
 
-/* ========= 本地存取 ========= */
-const PREFIX = 'log-';   // localStorage 键前缀
-let logs = {};           // { '2025-11-12': {date, hours, work, personal, savedAt} }
-let editingKey = null;   // null 表示新建；非 null 表示正在编辑的键
-
+/*======================== 日志持久化（localStorage） ========================*/
 function loadLogs(){
   logs = {};
   for(let i=0;i<localStorage.length;i++){
     const key = localStorage.key(i);
-    if(key.startsWith(PREFIX)){
-      const date = key.slice(PREFIX.length);
-      try{
-        const obj = JSON.parse(localStorage.getItem(key));
-        obj.date = date;                // 确保对象里有 date 字段
-        logs[date] = obj;
-      }catch(e){
-        console.warn('读取日志失败',key,e);
-      }
-    }
+    if (!key.startsWith(PREFIX)) continue;
+    const date = key.slice(PREFIX.length);
+    try{
+      const obj = JSON.parse(localStorage.getItem(key));
+      obj.date = date;
+      logs[date] = obj;
+    }catch(e){ console.warn('日志解析错误',key,e); }
+  }
+}
+function safeSetItem(key,value){
+  try{ localStorage.setItem(key,value); return true; }
+  catch(e){
+    if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED'){
+      alert('本地存储已满，请清理旧日志或改用 IndexedDB。');
+    }else{ console.error(e); }
+    return false;
   }
 }
 
+/*======================== UI 渲染 ========================*/
+function formatDisplay(dateStr){
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+}
 function renderLogs(){
   listDiv.innerHTML = '';
-  const dates = Object.keys(logs).sort((a,b)=> a<b?1:-1); // 新的在前
-  if(dates.length===0){
+  const dates = Object.keys(logs).sort((a,b)=> a<b?1:-1);
+  if (!dates.length){
     const p=document.createElement('p');
     p.textContent='暂无日志记录';
-    p.style.textAlign='center';
-    p.style.color='var(--c-title)';
+    p.style.textAlign='center'; p.style.color='var(--c-title)';
     listDiv.appendChild(p);
     return;
   }
-  dates.forEach(d=>{
-    const data = logs[d];
-    const item = document.createElement('div');
-    item.className='log-item';
-
-    const header = document.createElement('div');
-    header.className='log-header';
-    header.innerHTML = `<span class="log-date">${formatDisplay(d)}</span>
-                       <span class="log-hours">工时：${data.hours ?? 0} 小时</span>`;
-    item.appendChild(header);
-
-    const workSec = document.createElement('div');
-    workSec.className='log-section';
-    workSec.innerHTML = `<strong>工作内容：</strong><p>${data.work||''}</p>`;
-    item.appendChild(workSec);
-
-    const personalSec = document.createElement('div');
-    personalSec.className='log-section';
-    personalSec.innerHTML = `<strong>个人内容：</strong><p>${data.personal||''}</p>`;
-    item.appendChild(personalSec);
-
-    const actions = document.createElement('div');
-    actions.className='log-actions';
-    const editBtn = document.createElement('button');
-    editBtn.textContent='编辑';
-    editBtn.dataset.date=d;
-    const delBtn = document.createElement('button');
-    delBtn.textContent='删除';
-    delBtn.dataset.date=d;
-    actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
-    item.appendChild(actions);
-
-    listDiv.appendChild(item);
+  dates.forEach(date=>{
+    const data = logs[date];
+    const card = document.createElement('div'); card.className='log-item';
+    const hdr = document.createElement('div'); hdr.className='log-header';
+    hdr.innerHTML=`<span class="log-date">${formatDisplay(date)}</span>
+                  <span class="log-hours">工时：${data.hours ?? 0} 小时</span>`;
+    card.appendChild(hdr);
+    const workSec=document.createElement('div'); workSec.className='log-section';
+    workSec.innerHTML=`<strong>工作内容：</strong><p>${data.work||''}</p>`;
+    const personalSec=document.createElement('div'); personalSec.className='log-section';
+    personalSec.innerHTML=`<strong>个人内容：</strong><p>${data.personal||''}</p>`;
+    const actions=document.createElement('div'); actions.className='log-actions';
+    const editBtn=document.createElement('button'); editBtn.textContent='编辑'; editBtn.dataset.date=date;
+    const delBtn=document.createElement('button'); delBtn.textContent='删除'; delBtn.dataset.date=date;
+    actions.append(editBtn,delBtn);
+    card.append(hdr,workSec,personalSec,actions);
+    listDiv.appendChild(card);
   });
 }
 
-/* ========= 表单处理 ========= */
+/*======================== 保存日志（按钮） ========================*/
 function clearForm(){
   dateInput.value = todayYMD;
   hoursInput.value = '';
@@ -249,78 +208,215 @@ function clearForm(){
   personalInput.value = '';
 }
 function saveLog(){
-  const date = dateInput.value.trim();         // yyyy-mm-dd
-  if(!date){ alert('请选择日期'); return; }
-
-  const hours  = parseFloat(hoursInput.value) || 0;
-  const work   = workInput.value.trim();
+  const date = dateInput.value.trim();
+  if (!date){ alert('请选择日期'); return; }
+  const hours = parseFloat(hoursInput.value)||0;
+  const work = workInput.value.trim();
   const personal = personalInput.value.trim();
-
-  if(!work){
-    alert('请填写“工作内容”。');
-    workInput.focus();
-    return;
-  }
-
-  const key = PREFIX + date;
+  if (!work){ alert('请填写“工作内容”。'); workInput.focus(); return; }
+  const key = PREFIX+date;
   const payload = {date, hours, work, personal, savedAt:new Date().toISOString()};
-
-  // 若在编辑且修改了日期，需要删除旧键
-  if(editingKey && editingKey!==key){
-    localStorage.removeItem(editingKey);
-  }
-
-  localStorage.setItem(key, JSON.stringify(payload));
-
-  // 重置编辑状态
-  editingKey = null;
-  saveBtn.textContent = '保存';
-  clearForm();
-
-  loadLogs();
-  renderLogs();
+  // 若是编辑且改了日期，需要先删旧键
+  if (editingKey && editingKey!==key) localStorage.removeItem(editingKey);
+  if (!safeSetItem(key,JSON.stringify(payload))) return;
+  editingKey=null; saveBtn.textContent='保存'; clearForm();
+  loadLogs(); renderLogs();
+  // **自动写入 Excel（如果用户已经授权文件句柄）**
+  triggerExcelWrite(payload);
 }
-saveBtn.addEventListener('click', saveLog);
+saveBtn.addEventListener('click',saveLog);
 
-/* ========= 编辑 / 删除 ========= */
+/*======================== 编辑 / 删除 ========================*/
 listDiv.addEventListener('click', e=>{
-  if(e.target.matches('.log-actions button')){
-    const date = e.target.dataset.date;
-    if(e.target.textContent==='编辑'){
-      const data = logs[date];
-      if(!data) return;
-      editingKey = PREFIX + date;
-      dateInput.value    = data.date;
-      hoursInput.value   = data.hours ?? '';
-      workInput.value    = data.work ?? '';
-      personalInput.value= data.personal ?? '';
-      saveBtn.textContent = '更新';
-    }else if(e.target.textContent==='删除'){
-      if(!confirm(`确定删除 ${formatDisplay(date)} 的日志吗？`)) return;
-      const k = PREFIX + date;
-      localStorage.removeItem(k);
-      if(editingKey===k){
-        editingKey = null;
-        clearForm();
-        saveBtn.textContent = '保存';
-      }
-      loadLogs();
-      renderLogs();
-    }
+  if (!e.target.matches('.log-actions button')) return;
+  const date = e.target.dataset.date;
+  if (e.target.textContent==='编辑'){
+    const data = logs[date];
+    editingKey = PREFIX+date;
+    dateInput.value    = data.date;
+    hoursInput.value   = data.hours ?? '';
+    workInput.value    = data.work ?? '';
+    personalInput.value = data.personal ?? '';
+    saveBtn.textContent = '更新';
+  }else{ // 删除
+    if (!confirm(`确定删除 ${formatDisplay(date)} 的日志吗？`)) return;
+    const k = PREFIX+date;
+    localStorage.removeItem(k);
+    if (editingKey===k){ editingKey=null; clearForm(); saveBtn.textContent='保存'; }
+    loadLogs(); renderLogs();
   }
 });
 
-/* ========= 初始化 ========= */
-loadLogs();
-renderLogs();
+/*=============================================================
+   4️⃣ File System Access API 相关部分
+=============================================================*/
+const chooseBtn   = document.getElementById('choose-file');
+const fileInfo   = document.getElementById('file-info');
+let fileHandle = null;          // FileSystemFileHandle（已授权）
+let workbook   = null;          // SheetJS 工作簿对象（内存缓存）
 
-/* ========= 跨天自动回到今天（若未在编辑状态） ========= */
-setInterval(()=>{
-  const today = todayYMD;
-  if(!editingKey && dateInput.value!==today){
-    dateInput.value = today;
+/* ----- 检测浏览器是否支持 API ----- */
+const supportsFS = 'showSaveFilePicker' in window || 'showOpenFilePicker' in window;
+if (!supportsFS){
+  // 隐藏授权卡片，显示传统下载方式
+  document.getElementById('file-access-card').style.display='none';
+  document.getElementById('fallback-card').style.display='block';
+}
+
+/* ----- 读取已持久化的句柄（页面刷新后） ----- */
+if (supportsFS){
+  loadFileHandle().then(handle=>{
+    if (handle){
+      // 句柄可能失去权限，需要重新请求
+      handle.queryPermission({ mode:'readwrite' }).then(res=>{
+        if (res === 'granted'){
+          fileHandle = handle;
+          fileInfo.textContent = `已打开文件：${handle.name}`;
+          // 读取文件内容（如果已有工作簿）并缓存
+          loadWorkbookFromFile();
+        }else{
+          // 没有权限，需要让用户重新打开文件
+          fileInfo.textContent = '需要重新打开/创建文件（权限已失效）。';
+        }
+      });
+    }
+  });
+}
+
+/* ----- 用户点击 “打开/创建 Excel” ----- */
+chooseBtn.addEventListener('click', async ()=>{
+  try{
+    // 让用户选一个已有文件或创建新文件
+    const opts = {
+      types:[{
+        description:'Excel 工作簿',
+        accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx'] }
+      }]
+    };
+    // Chrome 86+ 兼容写入：showSaveFilePicker；旧版可以使用 showOpenFilePicker + createWritable
+    if (window.showSaveFilePicker){
+      fileHandle = await window.showSaveFilePicker(opts);
+    }else{
+      // 在支持 openFilePicker 的浏览器里先打开再写
+      const [h] = await window.showOpenFilePicker(opts);
+      fileHandle = h;
+    }
+
+    // 永久保存句柄（结构化克隆）供后续刷新使用
+    await saveFileHandle(fileHandle);
+    fileInfo.textContent = `已打开文件：${fileHandle.name}`;
+    // 读取文件（若文件为空则新建工作簿）
+    await loadWorkbookFromFile();
+  }catch(err){
+    console.error('打开文件失败', err);
+    if (err.name !== 'AbortError') alert('打开/创建文件失败，请检查浏览器是否支持 File System Access API。');
   }
-},60000);
+});
+
+/* ----- 读取现有工作簿或创建空工作簿 ----- */
+async function loadWorkbookFromFile(){
+  if (!fileHandle) return;
+  try{
+    const file = await fileHandle.getFile();
+    const buf = await file.arrayBuffer();
+    if (buf.byteLength===0){
+      // 空文件 → 新建工作簿
+      workbook = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([['日期','工时','工作内容','个人内容','保存时间']]);
+      XLSX.utils.book_append_sheet(workbook,'日志',ws);
+    }else{
+      const data = new Uint8Array(buf);
+      workbook = XLSX.read(data, {type:'array'});
+    }
+  }catch(e){
+    console.warn('读取工作簿失败，可能是文件为空或不是 Excel', e);
+    // 若读取失败，仍然创建空工作簿，防止后续写入报错
+    workbook = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([['日期','工时','工作内容','个人内容','保存时间']]);
+    XLSX.utils.book_append_sheet(workbook,'日志',ws);
+  }
+}
+
+/* ----- 将一条日志追加到工作簿并写回文件 ----- */
+async function triggerExcelWrite(logObj){
+  // 如果当前浏览器不支持 API，直接返回 false → 交给传统下载方式处理
+  if (!supportsFS || !fileHandle) return false;
+
+  // 确保工作簿已经在内存中
+  if (!workbook) await loadWorkbookFromFile();
+
+  // ① 取第一个工作表（这里固定为第一个）
+  const sheetName = workbook.SheetNames[0];
+  const ws = workbook.Sheets[sheetName];
+
+  // ② 把新记录转换成数组形式（与标题顺序对应）
+  const row = [
+    logObj.date,
+    logObj.hours ?? '',
+    logObj.work ?? '',
+    logObj.personal ?? '',
+    logObj.savedAt ?? new Date().toISOString()
+  ];
+  // ③ 追加（使用 SheetJS 的 json 插件，自动在尾部追加）
+  const jsonRow = [ { 日期:row[0], 工时:row[1], 工作内容:row[2], 个人内容:row[3], 保存时间:row[4] } ];
+  XLSX.utils.sheet_add_json(ws, jsonRow, { skipHeader:true, origin:-1 }); // -1 表示追加到末尾
+
+  // ④ 写回磁盘
+  try{
+    const writable = await fileHandle.createWritable(); // 每次写入都会覆盖整个文件
+    const wbout = XLSX.write(workbook, { bookType:'xlsx', type:'array' });
+    await writable.write(new Uint8Array(wbout));
+    await writable.close();
+    console.log('日志已写入 Excel 文件');
+    return true;
+  }catch(err){
+    console.error('写入 Excel 失败', err);
+    // 失去权限或其他错误时，可以提示用户重新打开文件
+    fileInfo.textContent = '写入失败，请重新打开文件或检查权限。';
+    // 清除已保存的句柄，让用户重新授权
+    await clearFileHandle();
+    fileHandle = null;
+    return false;
+  }
+}
+
+/*=============================================================
+   5️⃣ 传统下载方式（不支持 FS API 时的回退）
+=============================================================*/
+const fallbackCard = document.getElementById('fallback-card');
+const exportBtn   = document.getElementById('export-xlsx');
+
+function exportToExcelFallback(){
+  const rows = Object.values(logs).map(item=>({
+    日期:item.date,
+    工时:item.hours ?? '',
+    工作内容:item.work ?? '',
+    个人内容:item.personal ?? '',
+    保存时间:item.savedAt ?? ''
+  }));
+  if (!rows.length){ alert('暂无日志可导出'); return; }
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // 加标题行（如果不想标题可以省略）
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '日志');
+  const wbout = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+  const blob = new Blob([wbout],{type:'application/octet-stream'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const now = new Date();
+  const fname = `日志_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`;
+  a.download = fname;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); },0);
+}
+exportBtn.addEventListener('click', exportToExcelFallback);
+
+/*=============================================================
+   6️⃣ 页面初始化
+=============================================================*/
+loadLogs(); renderLogs();
 </script>
 </body>
 </html>
