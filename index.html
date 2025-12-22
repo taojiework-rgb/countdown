@@ -43,8 +43,8 @@
     }
 
     @keyframes pulse {
-      0% { text-shadow: 0 0 8px rgba(191,230,168,0.5); transform: scale(1); }
-      50% { text-shadow: 0 0 20px rgba(191,230,168,1); transform: scale(1.05); }
+      0%   { text-shadow: 0 0 8px rgba(191,230,168,0.5); transform: scale(1); }
+      50%  { text-shadow: 0 0 20px rgba(191,230,168,1);   transform: scale(1.05); }
       100% { text-shadow: 0 0 8px rgba(191,230,168,0.5); transform: scale(1); }
     }
 
@@ -73,10 +73,10 @@
 </head>
 <body>
 
-  <!-- 第一张卡片：已离职 -->
+  <!-- 第一张卡片：已入职天数 -->
   <div class="card">
-    <div class="card-title">已离职</div>
-    <div class="card-value" id="leave-days">0 天</div>
+    <div class="card-title">已入职天数</div>
+    <div class="card-value" id="work-days">0 天</div>
   </div>
 
   <!-- 第二张卡片：社保缴满20年 -->
@@ -96,18 +96,19 @@
   <div class="footer-text">陶陶理发</div>
 
   <script>
-    // 🕒 第一张卡片：已离职天数
-    const leaveStart = new Date('2025-10-24T00:00:00');
-    function updateLeaveDays() {
+    /* 🕒 第一张卡片：已入职天数 */
+    const workStart = new Date('2025-11-10T00:00:00');   // 入职日期
+    function updateWorkDays() {
       const now = new Date();
-      const diffMs = now - leaveStart;
-      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      document.getElementById('leave-days').textContent = `${days} 天`;
+      const diffMs = now - workStart;
+      const days = diffMs > 0 ? Math.floor(diffMs / (1000 * 60 * 60 * 24)) : 0;
+      document.getElementById('work-days').textContent = `${days} 天`;
     }
-    updateLeaveDays();
-    setInterval(updateLeaveDays, 600000);
+    updateWorkDays();
+    // 每 10 分钟更新一次（不需要太频繁）
+    setInterval(updateWorkDays, 600000);
 
-    // 🧮 第二张卡片：至社保缴满20年
+    /* 🧮 第二张卡片：至社保缴满20年 */
     const targetTime = new Date('2032-05-31T18:00:00');
     function updateCountdown() {
       const now = new Date();
@@ -121,13 +122,12 @@
         months += 12;
         years -= 1;
       }
-      const formatted = `${years} 年 ${months} 月`;
-      document.getElementById('countdown').textContent = formatted;
+      document.getElementById('countdown').textContent = `${years} 年 ${months} 月`;
     }
     updateCountdown();
     setInterval(updateCountdown, 3600000);
 
-    // 👶 第三张卡片：距陶陶满18周岁还有（年-月-日-时-分-秒）
+    /* 👶 第三张卡片：距陶陶满18周岁还有（年-月-日-时-分-秒） */
     const taotao18 = new Date('2037-03-17T23:58:00');
 
     function updateTaotao() {
@@ -137,14 +137,14 @@
 
       let totalSeconds = Math.floor(diff / 1000);
 
-      const years = Math.floor(totalSeconds / (365.25*24*3600));
-      totalSeconds -= years * 365.25*24*3600;
+      const years = Math.floor(totalSeconds / (365.25 * 24 * 3600));
+      totalSeconds -= years * 365.25 * 24 * 3600;
 
-      const months = Math.floor(totalSeconds / (30.44*24*3600));
-      totalSeconds -= months * 30.44*24*3600;
+      const months = Math.floor(totalSeconds / (30.44 * 24 * 3600));
+      totalSeconds -= months * 30.44 * 24 * 3600;
 
-      const days = Math.floor(totalSeconds / (24*3600));
-      totalSeconds -= days * 24*3600;
+      const days = Math.floor(totalSeconds / (24 * 3600));
+      totalSeconds -= days * 24 * 3600;
 
       const hours = Math.floor(totalSeconds / 3600);
       totalSeconds -= hours * 3600;
