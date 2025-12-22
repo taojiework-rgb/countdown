@@ -1,476 +1,326 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>个人时间状态面板</title>
-  <style>
-    :root {
-      --bg-main:   #0f1724;
-      --bg-card:   #1f2937;
-      --bg-list:   #2a3b4c;
-      --color-txt: #e0e0e0;
-      --color-title:#a0a0a0;
-      --color-val: #bfe6a8;
-      --accent:    #bfe6a8;
-      --accent-hover:#def5c5;
-    }
+<meta charset="utf-8">
+<title>个人日志记录板</title>
+<style>
+  :root{
+    --bg-main:#0f1724;
+    --bg-card:#1f2937;
+    --bg-list:#2a3b4c;
+    --c-text:#e0e0e0;
+    --c-title:#a0a0a0;
+    --c-value:#bfe6a8;
+    --accent:#bfe6a8;
+    --accent-hover:#def5c5;
+  }
+  body{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+    background:var(--bg-main);
+    color:var(--c-text);
+    font-family:sans-serif;
+    gap:25px;
+    padding:20px;
+  }
+  .card{
+    background:var(--bg-card);
+    padding:25px 30px;
+    border-radius:15px;
+    box-shadow:0 0 15px rgba(0,0,0,0.3);
+    width:100%;
+    max-width:560px;
+  }
+  .card-title{
+    font-size:1.2rem;
+    color:var(--c-title);
+    text-align:center;
+    margin-bottom:12px;
+  }
+  .save-btn{
+    display:block;
+    margin:0 auto;
+    background:var(--accent);
+    color:var(--bg-main);
+    border:none;
+    border-radius:6px;
+    padding:8px 20px;
+    font-size:0.95rem;
+    cursor:pointer;
+    transition:background .2s,transform .2s;
+  }
+  .save-btn:hover{
+    background:var(--accent-hover);
+    transform:translateY(-2px);
+  }
+  .form-label{
+    display:block;
+    margin-bottom:4px;
+    color:var(--c-title);
+    font-size:0.95rem;
+  }
+  .form-input,.form-textarea{
+    width:100%;
+    background:var(--bg-card);
+    color:var(--accent);
+    border:1px solid var(--accent);
+    border-radius:6px;
+    padding:6px 8px;
+    margin-bottom:12px;
+    font-size:0.95rem;
+    transition:border-color .2s,box-shadow .2s;
+  }
+  .form-input:focus,
+  .form-textarea:focus{
+    outline:none;
+    border-color:var(--accent-hover);
+    box-shadow:0 0 8px rgba(191,230,168,.7);
+  }
+  .form-textarea{
+    min-height:80px;
+    resize:vertical;
+  }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: var(--bg-main);
-      color: var(--color-txt);
-      font-family: sans-serif;
-      gap: 25px;
-    }
-    .card {
-      background: var(--bg-card);
-      padding: 25px 30px;
-      border-radius: 15px;
-      text-align: left;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      min-width: 340px;
-      max-width: 560px;
-    }
-    .card-title {
-      font-size: 1.1rem;
-      color: var(--color-title);
-      margin-bottom: 12px;
-      text-align: center;
-    }
-    .card-value {
-      font-size: 2rem;
-      color: var(--color-val);
-      text-align: center;
-    }
-
-    /* 只保留动画，不改动字体大小 */
-    #taotao-remaining {
-      animation: pulse 2s infinite ease-in-out;
-    }
-    @keyframes pulse {
-      0%   { text-shadow: 0 0 8px rgba(191,230,168,0.5); transform: scale(1); }
-      50%  { text-shadow: 0 0 20px rgba(191,230,168,1);   transform: scale(1.05); }
-      100% { text-shadow: 0 0 8px rgba(191,230,168,0.5); transform: scale(1); }
-    }
-
-    .photo {
-      width: 160px;
-      height: 160px;
-      object-fit: cover;
-      border-radius: 50%;
-      box-shadow: 0 0 25px rgba(191, 230, 168, 0.6);
-      border: 3px solid var(--accent);
-      margin: 30px 0 10px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .photo:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 35px rgba(191, 230, 168, 0.9);
-    }
-    .footer-text {
-      font-size: 1.2rem;
-      color: var(--accent);
-      text-shadow: 0 0 8px rgba(191, 230, 168, 0.8);
-      margin-bottom: 20px;
-      letter-spacing: 1px;
-    }
-
-    /* ==== 报告表单 ==== */
-    .report-form-label {
-      display: block;
-      color: var(--color-title);
-      margin-bottom: 4px;
-      font-size: 0.95rem;
-    }
-    .report-form-input {
-      width: 100%;
-      background: var(--bg-card);
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      border-radius: 6px;
-      padding: 6px 8px;
-      margin-bottom: 12px;
-      font-size: 0.95rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .report-form-input:focus {
-      outline: none;
-      border-color: var(--accent-hover);
-      box-shadow: 0 0 8px rgba(191,230,168,0.7);
-    }
-    .report-textarea {
-      width: 100%;
-      min-height: 80px;
-      background: var(--bg-card);
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      border-radius: 6px;
-      padding: 8px;
-      margin-bottom: 12px;
-      resize: vertical;
-      font-family: inherit;
-      font-size: 0.95rem;
-      line-height: 1.4;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .report-textarea:focus {
-      outline: none;
-      border-color: var(--accent-hover);
-      box-shadow: 0 0 8px rgba(191,230,168,0.7);
-    }
-    .save-btn {
-      display: block;
-      margin: 0 auto;
-      background: var(--accent);
-      color: var(--bg-main);
-      border: none;
-      border-radius: 6px;
-      padding: 8px 20px;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.2s;
-    }
-    .save-btn:hover {
-      background: var(--accent-hover);
-      transform: translateY(-2px);
-    }
-
-    /* ==== 已保存的日报列表 ==== */
-    #reports-container {
-      width: 100%;
-      max-width: 560px;
-    }
-    .report-card {
-      background: var(--bg-list);
-      border-radius: 12px;
-      padding: 15px 20px;
-      margin-bottom: 12px;
-      color: var(--color-txt);
-    }
-    .report-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      font-size: 1rem;
-      margin-bottom: 8px;
-    }
-    .report-header .report-date { color: var(--accent); font-weight: 600; }
-    .report-header .report-hours { color: var(--accent); }
-    .report-body div { margin-bottom: 6px; }
-    .report-body strong { color: var(--color-title); }
-    .report-actions {
-      text-align: right;
-      margin-top: 8px;
-    }
-    .report-actions button {
-      background: var(--accent);
-      color: var(--bg-main);
-      border: none;
-      border-radius: 5px;
-      padding: 4px 10px;
-      margin-left: 6px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .report-actions button:hover {
-      background: var(--accent-hover);
-    }
-  </style>
+  #log-list{
+    width:100%;
+    max-width:560px;
+  }
+  .log-item{
+    background:var(--bg-list);
+    border-radius:12px;
+    padding:15px 20px;
+    margin-bottom:12px;
+    color:var(--c-text);
+  }
+  .log-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:1rem;
+    margin-bottom:8px;
+  }
+  .log-header .log-date{color:var(--accent);font-weight:600;}
+  .log-header .log-hours{color:var(--accent);}
+  .log-section{
+    margin-bottom:6px;
+  }
+  .log-section strong{
+    color:var(--c-title);
+  }
+  .log-actions{
+    text-align:right;
+    margin-top:8px;
+  }
+  .log-actions button{
+    background:var(--accent);
+    color:var(--bg-main);
+    border:none;
+    border-radius:5px;
+    padding:4px 10px;
+    margin-left:6px;
+    font-size:0.85rem;
+    cursor:pointer;
+    transition:background .2s;
+  }
+  .log-actions button:hover{
+    background:var(--accent-hover);
+  }
+</style>
 </head>
 <body>
 
-  <!-- ======== 添加/编辑日报表单（位于页面最上） ======== -->
-  <div class="card" id="daily-report-form">
-    <div class="card-title">添加/编辑日报</div>
+<!-- ======== 添加 / 编辑日志表单 ======== -->
+<div class="card" id="log-form">
+  <div class="card-title">添加/编辑日志</div>
 
-    <label class="report-form-label" for="report-date-input">日期</label>
-    <input type="date" id="report-date-input" class="report-form-input" />
+  <label class="form-label" for="log-date">日期</label>
+  <input type="date" id="log-date" class="form-input">
 
-    <label class="report-form-label" for="report-hours-input">工时（小时）</label>
-    <input type="number" id="report-hours-input" class="report-form-input"
-           step="0.5" min="0" placeholder="如 8" />
+  <label class="form-label" for="log-hours">工时（小时）</label>
+  <input type="number" id="log-hours" class="form-input" step="0.5" min="0" placeholder="如 8">
 
-    <textarea id="work-content" class="report-textarea"
-              placeholder="当日工作（必填）"></textarea>
+  <label class="form-label" for="log-work">工作内容</label>
+  <textarea id="log-work" class="form-textarea" placeholder="今天的工作（必填）"></textarea>
 
-    <textarea id="issue-content" class="report-textarea"
-              placeholder="存在问题（选填）"></textarea>
+  <label class="form-label" for="log-personal">个人内容</label>
+  <textarea id="log-personal" class="form-textarea" placeholder="个人想法、生活记录等（选填）"></textarea>
 
-    <button class="save-btn" id="save-report">保存</button>
-  </div>
+  <button class="save-btn" id="save-log">保存</button>
+</div>
 
-  <!-- ======== 三张状态卡（放在表单下方） ======== -->
-  <div class="card">
-    <div class="card-title">已入职天数</div>
-    <div class="card-value" id="work-days">0 天</div>
-  </div>
+<!-- ======== 已保存的日志列表 ======== -->
+<div id="log-list"></div>
 
-  <div class="card">
-    <div class="card-title">至社保缴满20年 (2032年5月)</div>
-    <div class="card-value" id="countdown">计算中...</div>
-  </div>
+<script>
+/* ========= 常量与工具函数 ========= */
+const dateInput   = document.getElementById('log-date');
+const hoursInput  = document.getElementById('log-hours');
+const workInput   = document.getElementById('log-work');
+const personalInput = document.getElementById('log-personal');
+const saveBtn     = document.getElementById('save-log');
+const listDiv     = document.getElementById('log-list');
 
-  <div class="card">
-    <div class="card-title">距陶陶满18周岁还有</div>
-    <div class="card-value" id="taotao-remaining">计算中...</div>
-  </div>
+const todayYMD = (()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+dateInput.value = todayYMD;
 
-  <!-- ======== 已保存的日报列表 ======== -->
-  <div id="reports-container"></div>
+// 把 ISO 日期转为 “2025年11月12日 星期五”
+function formatDisplay(dateStr){
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+}
 
-  <!-- ======== 底部头像与签名 ======== -->
-  <img src="myphoto.jpg" alt="我的头像" class="photo" />
-  <div class="footer-text">陶陶理发</div>
+/* ========= 本地存取 ========= */
+const PREFIX = 'log-';   // localStorage 键前缀
+let logs = {};           // { '2025-11-12': {date, hours, work, personal, savedAt} }
+let editingKey = null;   // null 表示新建；非 null 表示正在编辑的键
 
-  <script>
-    /* ============= 1️⃣ 已入职天数 ============= */
-    const workStart = new Date('2025-11-10T00:00:00'); // 入职日期
-    function updateWorkDays() {
-      const now = new Date();
-      const diffMs = now - workStart;
-      const days = diffMs > 0 ? Math.floor(diffMs / (1000 * 60 * 60 * 24)) : 0;
-      document.getElementById('work-days').textContent = `${days} 天`;
+function loadLogs(){
+  logs = {};
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    if(key.startsWith(PREFIX)){
+      const date = key.slice(PREFIX.length);
+      try{
+        const obj = JSON.parse(localStorage.getItem(key));
+        obj.date = date;                // 确保对象里有 date 字段
+        logs[date] = obj;
+      }catch(e){
+        console.warn('读取日志失败',key,e);
+      }
     }
-    updateWorkDays();
-    setInterval(updateWorkDays, 600000); // 10 分钟刷新一次
+  }
+}
 
-    /* ============= 2️⃣ 社保 20 年倒计时 ============= */
-    const targetSocial = new Date('2032-05-31T18:00:00');
-    function updateCountdown() {
-      const now = new Date();
-      if (now > targetSocial) {
-        document.getElementById('countdown').textContent = '已达成';
-        return;
-      }
-      let years = targetSocial.getFullYear() - now.getFullYear();
-      let months = targetSocial.getMonth() - now.getMonth();
-      if (months < 0) { months += 12; years -= 1; }
-      document.getElementById('countdown').textContent = `${years} 年 ${months} 月`;
-    }
-    updateCountdown();
-    setInterval(updateCountdown, 3600000); // 每小时刷新
+function renderLogs(){
+  listDiv.innerHTML = '';
+  const dates = Object.keys(logs).sort((a,b)=> a<b?1:-1); // 新的在前
+  if(dates.length===0){
+    const p=document.createElement('p');
+    p.textContent='暂无日志记录';
+    p.style.textAlign='center';
+    p.style.color='var(--c-title)';
+    listDiv.appendChild(p);
+    return;
+  }
+  dates.forEach(d=>{
+    const data = logs[d];
+    const item = document.createElement('div');
+    item.className='log-item';
 
-    /* ============= 3️⃣ 陶陶满 18 周岁倒计时 ============= */
-    const taotao18 = new Date('2037-03-17T23:58:00');
-    function updateTaotao() {
-      const now = new Date();
-      let diff = taotao18 - now;
-      if (diff < 0) diff = 0;
-      let totalSeconds = Math.floor(diff / 1000);
+    const header = document.createElement('div');
+    header.className='log-header';
+    header.innerHTML = `<span class="log-date">${formatDisplay(d)}</span>
+                       <span class="log-hours">工时：${data.hours ?? 0} 小时</span>`;
+    item.appendChild(header);
 
-      const years = Math.floor(totalSeconds / (365.25 * 24 * 3600));
-      totalSeconds -= years * 365.25 * 24 * 3600;
+    const workSec = document.createElement('div');
+    workSec.className='log-section';
+    workSec.innerHTML = `<strong>工作内容：</strong><p>${data.work||''}</p>`;
+    item.appendChild(workSec);
 
-      const months = Math.floor(totalSeconds / (30.44 * 24 * 3600));
-      totalSeconds -= months * 30.44 * 24 * 3600;
+    const personalSec = document.createElement('div');
+    personalSec.className='log-section';
+    personalSec.innerHTML = `<strong>个人内容：</strong><p>${data.personal||''}</p>`;
+    item.appendChild(personalSec);
 
-      const days = Math.floor(totalSeconds / (24 * 3600));
-      totalSeconds -= days * 24 * 3600;
+    const actions = document.createElement('div');
+    actions.className='log-actions';
+    const editBtn = document.createElement('button');
+    editBtn.textContent='编辑';
+    editBtn.dataset.date=d;
+    const delBtn = document.createElement('button');
+    delBtn.textContent='删除';
+    delBtn.dataset.date=d;
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    item.appendChild(actions);
 
-      const hours = Math.floor(totalSeconds / 3600);
-      totalSeconds -= hours * 3600;
+    listDiv.appendChild(item);
+  });
+}
 
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
+/* ========= 表单处理 ========= */
+function clearForm(){
+  dateInput.value = todayYMD;
+  hoursInput.value = '';
+  workInput.value = '';
+  personalInput.value = '';
+}
+function saveLog(){
+  const date = dateInput.value.trim();         // yyyy-mm-dd
+  if(!date){ alert('请选择日期'); return; }
 
-      const formatted = `${years} 年 ${months} 月 ${days} 天 ${hours} 时 ${minutes} 分 ${seconds} 秒`;
-      document.getElementById('taotao-remaining').textContent = formatted;
-    }
-    updateTaotao();
-    setInterval(updateTaotao, 1000);
+  const hours  = parseFloat(hoursInput.value) || 0;
+  const work   = workInput.value.trim();
+  const personal = personalInput.value.trim();
 
-    /* ============= 4️⃣ 报告（日报）系统 ============= */
-    const dateInput   = document.getElementById('report-date-input');
-    const hoursInput  = document.getElementById('report-hours-input');
-    const workInput   = document.getElementById('work-content');
-    const issueInput  = document.getElementById('issue-content');
-    const saveBtn     = document.getElementById('save-report');
-    const reportsContainer = document.getElementById('reports-container');
+  if(!work){
+    alert('请填写“工作内容”。');
+    workInput.focus();
+    return;
+  }
 
-    // 默认填入今天
-    const formatYMD = d => {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${dd}`;
-    };
-    const todayYMD = formatYMD(new Date());
-    dateInput.value = todayYMD;
+  const key = PREFIX + date;
+  const payload = {date, hours, work, personal, savedAt:new Date().toISOString()};
 
-    // 把 ISO 日期转成 “2025年11月12日 星期五”
-    const formatDisplayDate = iso => {
-      const d = new Date(iso);
-      return d.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long'
-      });
-    };
+  // 若在编辑且修改了日期，需要删除旧键
+  if(editingKey && editingKey!==key){
+    localStorage.removeItem(editingKey);
+  }
 
-    // 报告数据（键名：YYYY-MM-DD）——全部保存在 localStorage
-    let reports = {};          // { '2025-11-12': {date, hours, work, issue, savedAt} }
-    let editingKey = null;    // null = 新建；若非 null 则为正在编辑的 report‑键
+  localStorage.setItem(key, JSON.stringify(payload));
 
-    const loadReports = () => {
-      reports = {};
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith('report-')) {
-          const date = key.slice(7);
-          try {
-            const obj = JSON.parse(localStorage.getItem(key));
-            obj.date = date; // 确保有 date 字段
-            reports[date] = obj;
-          } catch (e) {
-            console.warn('读取日报失败', key, e);
-          }
-        }
-      }
-    };
+  // 重置编辑状态
+  editingKey = null;
+  saveBtn.textContent = '保存';
+  clearForm();
 
-    const renderReports = () => {
-      reportsContainer.innerHTML = '';
-      const dates = Object.keys(reports).sort((a, b) => a < b ? 1 : -1); // 最新在前
-      if (dates.length === 0) {
-        const p = document.createElement('p');
-        p.textContent = '暂无日报记录';
-        p.style.textAlign = 'center';
-        p.style.color = var(--color-title);
-        reportsContainer.appendChild(p);
-        return;
-      }
-      dates.forEach(dateStr => {
-        const data = reports[dateStr];
-        const card = document.createElement('div');
-        card.className = 'report-card';
+  loadLogs();
+  renderLogs();
+}
+saveBtn.addEventListener('click', saveLog);
 
-        const header = document.createElement('div');
-        header.className = 'report-header';
-        header.innerHTML = `
-          <span class="report-date">${formatDisplayDate(dateStr)}</span>
-          <span class="report-hours">工时：${data.hours ?? 0} 小时</span>
-        `;
-        card.appendChild(header);
-
-        const body = document.createElement('div');
-        body.className = 'report-body';
-        body.innerHTML = `
-          <div><strong>当日工作：</strong><p>${data.work || ''}</p></div>
-          <div><strong>存在问题：</strong><p>${data.issue || ''}</p></div>
-        `;
-        card.appendChild(body);
-
-        const actions = document.createElement('div');
-        actions.className = 'report-actions';
-        const editBtn = document.createElement('button');
-        editBtn.textContent = '编辑';
-        editBtn.className = 'edit-btn';
-        editBtn.dataset.date = dateStr;
-        const delBtn = document.createElement('button');
-        delBtn.textContent = '删除';
-        delBtn.className = 'delete-btn';
-        delBtn.dataset.date = dateStr;
-        actions.appendChild(editBtn);
-        actions.appendChild(delBtn);
-        card.appendChild(actions);
-
-        reportsContainer.appendChild(card);
-      });
-    };
-
-    const clearForm = () => {
-      dateInput.value = todayYMD;
-      hoursInput.value = '';
-      workInput.value = '';
-      issueInput.value = '';
-    };
-
-    const saveReport = () => {
-      const date = dateInput.value.trim(); // YYYY-MM-DD
-      if (!date) { alert('请选择日期'); return; }
-
-      const hours = parseFloat(hoursInput.value) || 0;
-      const work = workInput.value.trim();
-      const issue = issueInput.value.trim();
-
-      if (!work) {
-        alert('请填写“当日工作”。');
-        workInput.focus();
-        return;
-      }
-
-      const key = `report-${date}`;
-      const payload = { date, hours, work, issue, savedAt: new Date().toISOString() };
-
-      // 若改动了日期且之前在编辑状态，需要删除旧的键
-      if (editingKey && editingKey !== key) {
-        localStorage.removeItem(editingKey);
-      }
-
-      localStorage.setItem(key, JSON.stringify(payload));
-
-      // 重置编辑状态
-      editingKey = null;
-      saveBtn.textContent = '保存';
-      clearForm();
-
-      // 重新读取并渲染列表
-      loadReports();
-      renderReports();
-    };
-
-    const editReport = (dateStr) => {
-      const data = reports[dateStr];
-      if (!data) return;
-      editingKey = `report-${dateStr}`;
-      dateInput.value   = data.date;
-      hoursInput.value  = data.hours ?? '';
-      workInput.value   = data.work ?? '';
-      issueInput.value  = data.issue ?? '';
+/* ========= 编辑 / 删除 ========= */
+listDiv.addEventListener('click', e=>{
+  if(e.target.matches('.log-actions button')){
+    const date = e.target.dataset.date;
+    if(e.target.textContent==='编辑'){
+      const data = logs[date];
+      if(!data) return;
+      editingKey = PREFIX + date;
+      dateInput.value    = data.date;
+      hoursInput.value   = data.hours ?? '';
+      workInput.value    = data.work ?? '';
+      personalInput.value= data.personal ?? '';
       saveBtn.textContent = '更新';
-    };
-
-    const deleteReport = (dateStr) => {
-      if (!confirm(`确定删除 ${formatDisplayDate(dateStr)} 的日报吗？`)) return;
-      const key = `report-${dateStr}`;
-      localStorage.removeItem(key);
-      if (editingKey === key) {
+    }else if(e.target.textContent==='删除'){
+      if(!confirm(`确定删除 ${formatDisplay(date)} 的日志吗？`)) return;
+      const k = PREFIX + date;
+      localStorage.removeItem(k);
+      if(editingKey===k){
         editingKey = null;
         clearForm();
         saveBtn.textContent = '保存';
       }
-      loadReports();
-      renderReports();
-    };
+      loadLogs();
+      renderLogs();
+    }
+  }
+});
 
-    // 事件绑定
-    saveBtn.addEventListener('click', saveReport);
-    reportsContainer.addEventListener('click', (e) => {
-      if (e.target.classList.contains('edit-btn')) {
-        editReport(e.target.dataset.date);
-      } else if (e.target.classList.contains('delete-btn')) {
-        deleteReport(e.target.dataset.date);
-      }
-    });
+/* ========= 初始化 ========= */
+loadLogs();
+renderLogs();
 
-    // 初始加载
-    loadReports();
-    renderReports();
-
-    // 若页面未处于编辑状态，每分钟自动把日期恢复为今天（防止跨天后仍旧停留在前一天）
-    setInterval(() => {
-      const today = formatYMD(new Date());
-      if (!editingKey && dateInput.value !== today) {
-        dateInput.value = today;
-      }
-    }, 60000);
-  </script>
+/* ========= 跨天自动回到今天（若未在编辑状态） ========= */
+setInterval(()=>{
+  const today = todayYMD;
+  if(!editingKey && dateInput.value!==today){
+    dateInput.value = today;
+  }
+},60000);
+</script>
 </body>
 </html>
