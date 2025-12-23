@@ -2,441 +2,277 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>日志 → 存储到页面（URL hash，不写入本地）</title>
+<title>最近六个节日/纪念日倒计时</title>
 <style>
   :root{
-    --bg-main:#0f1724;   --bg-card:#1f2937;   --bg-list:#2a3b4c;
-    --c-text:#e0e0e0;    --c-title:#a0a0a0;   --c-val:#bfe6a8;
-    --accent:#bfe6a8;    --accent-hover:#def5c5;
+    --bg-main:#0f1724;     /* 页面整体背景 */
+    --bg-card:#1f2937;     /* 卡片背景 */
+    --c-title:#a0a0a0;    /* 标题、日期文字颜色 */
+    --c-val:#bfe6a8;      /* 倒计时文字颜色 */
+    --accent:#bfe6a8;      /* 按钮等强调色 */
+    --accent-hover:#def5c5;
   }
   body{
-    display:flex; flex-direction:column; align-items:center;
-    min-height:100vh; background:var(--bg-main); color:var(--c-text);
-    font-family:sans-serif; gap:25px; padding:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    margin:0;
+    background:var(--bg-main);
+    color:#e0e0e0;
+    font-family:sans-serif;
+    gap:30px;
+    padding:20px;
   }
-  .card{background:var(--bg-card); padding:25px 30px;
-        border-radius:15px; box-shadow:0 0 15px rgba(0,0,0,.3);
-        width:100%; max-width:560px;}
-  .card-title{font-size:1.2rem; color:var(--c-title);
-              text-align:center; margin-bottom:12px;}
-  .btn{
-    display:block; margin:0 auto; background:var(--accent);
-    color:var(--bg-main); border:none; border-radius:6px;
-    padding:8px 20px; font-size:.95rem; cursor:pointer;
-    transition:background .2s,transform .2s;
+  h1{
+    font-size:1.8rem;
+    color:var(--c-val);
+    margin:0;
+    text-shadow:0 0 8px rgba(191,230,168,.6);
   }
-  .btn:hover{background:var(--accent-hover); transform:translateY(-2px);}
-  .form-label{display:block; margin-bottom:4px;
-               color:var(--c-title); font-size:.95rem;}
-  .form-input,.form-textarea{
-    width:100%; background:var(--bg-card); color:var(--accent);
-    border:1px solid var(--accent); border-radius:6px;
-    padding:6px 8px; margin-bottom:12px; font-size:.95rem;
-    transition:border-color .2s,box-shadow .2s;
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
+    gap:25px;
+    width:100%;
+    max-width:1100px;
   }
-  .form-input:focus,.form-textarea:focus{
-    outline:none; border-color:var(--accent-hover);
-    box-shadow:0 0 8px rgba(191,230,168,.7);
+  .card{
+    background:var(--bg-card);
+    border-radius:15px;
+    padding:20px 25px;
+    box-shadow:0 0 15px rgba(0,0,0,.3);
+    text-align:center;
   }
-  .form-textarea{min-height:80px; resize:vertical;}
-  #log-list{width:100%; max-width:560px;}
-  .log-item{background:var(--bg-list);border-radius:12px;
-            padding:15px 20px;margin-bottom:12px;color:var(--c-text);}
-  .log-header{display:flex;justify-content:space-between;
-             align-items:baseline;font-size:1rem;margin-bottom:8px;}
-  .log-header .log-date{color:var(--accent);font-weight:600;}
-  .log-header .log-hours{color:var(--accent);}
-  .log-section{margin-bottom:6px;}
-  .log-section strong{color:var(--c-title);}
-  .log-actions{text-align:right;margin-top:8px;}
-  .log-actions button{
-    background:var(--accent);color:var(--bg-main);border:none;
-    border-radius:5px;padding:4px 10px;margin-left:6px;
-    font-size:.85rem;cursor:pointer;transition:background .2s;
+  .card-title{
+    font-size:1.1rem;
+    color:var(--c-title);
+    margin-bottom:8px;
   }
-  .log-actions button:hover{background:var(--accent-hover);}
-  #file-info{margin-top:10px;color:var(--c-title);font-size:.9rem;}
+  .card-date{
+    font-size:0.96rem;
+    color:var(--c-title);
+    margin-bottom:6px;
+  }
+  .card-value{
+    font-size:1.8rem;
+    color:var(--c-val);
+    font-weight:600;
+  }
+  .card-value.past{
+    color:#f87171;          /* 已过去的假期显示红色 */
+    font-weight:400;
+  }
 </style>
 </head>
 <body>
 
-<!-- 1️⃣ 打开/创建 Excel（仅在支持的浏览器中显示） -->
-<div class="card" id="file-access-card" style="display:none;">
-  <div class="card-title">打开或创建 Excel 文件（首次授权）</div>
-  <button class="btn" id="choose-file">打开/创建 Excel</button>
-  <p id="file-info"></p>
-</div>
+<h1>最近六个节日/纪念日倒计时</h1>
 
-<!-- 2️⃣ 添加/编辑日志 -->
-<div class="card" id="log-form">
-  <div class="card-title">添加 / 编辑日志</div>
+<div class="cards" id="event-cards"><!-- 卡片将在脚本里自动生成 --></div>
 
-  <label class="form-label" for="log-date">日期</label>
-  <input type="date" id="log-date" class="form-input">
-
-  <label class="form-label" for="log-hours">工时（小时）</label>
-  <input type="number" id="log-hours" class="form-input" step="0.5" min="0" placeholder="如 8">
-
-  <label class="form-label" for="log-work">工作内容（必填）</label>
-  <textarea id="log-work" class="form-textarea" placeholder="今天的工作……"></textarea>
-
-  <label class="form-label" for="log-personal">个人内容（选填）</label>
-  <textarea id="log-personal" class="form-textarea" placeholder="生活、感想……"></textarea>
-
-  <button class="btn" id="save-log">保存</button>
-</div>
-
-<!-- 3️⃣ 已保存日志的列表 -->
-<div id="log-list"></div>
-
-<!-- 4️⃣ 回退方案：不支持 API 时显示 -->
-<div class="card" id="fallback-card" style="display:none;">
-  <div class="card-title">导出为 Excel（手动下载）</div>
-  <button class="btn" id="export-xlsx">导出为 Excel (.xlsx)</button>
-</div>
-
-<!-- 5️⃣ 第三方库：SheetJS （XLSX） -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-<!-- 6️⃣ 自己的业务脚本（完整实现） -->
 <script>
-/* =========================================================
-   0️⃣ 基础变量 & 表单
-   ========================================================= */
-const PREFIX    = 'log-';
-const todayYMD  = (()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+/* -------------------------------------------------------
+   1️⃣ 节假日 & 纪念日数据（自行补充/修改年份）
+   ------------------------------------------------------- */
+// 春节（农历新年）—— 年份对应的公历日期
+const CNY = {
+  2024:'2024-02-10',
+  2025:'2025-01-29',
+  2026:'2026-02-17',
+  2027:'2027-02-06',
+  2028:'2028-01-26',
+  2029:'2029-02-13',
+  2030:'2030-02-03',
+  2031:'2031-01-23',
+  2032:'2032-02-11',
+  2033:'2033-01-31',
+  2034:'2034-02-19',
+  2035:'2035-02-08'
+};
 
-const dateInput    = document.getElementById('log-date');
-const hoursInput   = document.getElementById('log-hours');
-const workInput    = document.getElementById('log-work');
-const personalInput= document.getElementById('log-personal');
-const saveBtn      = document.getElementById('save-log');
-const listDiv      = document.getElementById('log-list');
+// 清明节（公历 4 月 4/5 日）
+const QINGMING = {
+  2024:'2024-04-04',
+  2025:'2025-04-04',
+  2026:'2026-04-05',
+  2027:'2027-04-04',
+  2028:'2028-04-04',
+  2029:'2029-04-04',
+  2030:'2030-04-04',
+  2031:'2031-04-05',
+  2032:'2032-04-04',
+  2033:'2023-04-04', // 举例：如果没有对应年份，手动补
+  2034:'2034-04-05',
+  2035:'2035-04-04'
+};
 
-dateInput.value = todayYMD;               // 默认填今天
+/* 固定节日生成函数（元旦、劳动节、情人节、结婚纪念日等） */
+function fixedHoliday(name, month, day, year, extra={}){
+  return Object.assign({
+    name,
+    date:new Date(`${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}T00:00:00`)
+  }, extra);
+}
 
-let logs = {};               // 内存缓存，结构 { '2025-12-01': {...} }
-let editingKey = null;      // null = 新增；非 null = 正在编辑
+/* 某一年全部需要展示的事件（返回 6 条对象） */
+function eventsOfYear(year){
+  const marriageYear = 2018;               // 领证年份
+  const marriageMonth = 6;
+  const marriageDay   = 21;
+  const anniversaryNumber = year - marriageYear; // 第几周年（对应的年份）
 
-/* =========================================================
-   1️⃣ 使用 URL hash 保存日志（不写入本地文件或 localStorage）
-   ========================================================= */
-function encodeLogsToHash(obj){
-  try{
-    const str = JSON.stringify(obj);
-    const b64 = btoa(unescape(encodeURIComponent(str)));
-    return b64;
-  }catch(e){ console.warn('encode error',e); return ''; }
-}
-function decodeHashToLogs(hash){
-  try{
-    if (!hash) return {};
-    const decoded = decodeURIComponent(escape(atob(hash)));
-    return JSON.parse(decoded);
-  }catch(e){ console.warn('hash decode error',e); return {}; }
-}
-function saveLogsToHash(){
-  const b64 = encodeLogsToHash(logs);
-  history.replaceState(null,'', '#'+b64);
-}
-function loadLogs(){
-  const hash = location.hash.slice(1);
-  logs = decodeHashToLogs(hash);
-}
-window.addEventListener('hashchange', ()=>{ loadLogs(); renderLogs(); });
+  return [
+    // 元旦
+    fixedHoliday('元旦',   1, 1, year),
 
-/* =========================================================
-   2️⃣ UI 渲染
-   ========================================================= */
-function fmtDate(yymmdd){
-  const d = new Date(yymmdd);
-  return d.toLocaleDateString('zh-CN',{year:'numeric', month:'long', day:'numeric', weekday:'long'});
+    // 春节（使用 CNY 对象的具体日期）
+    { name:'春节', date:new Date(CNY[year]+'T00:00:00') },
+
+    // 清明节
+    { name:'清明节', date:new Date(QINGMING[year]+'T00:00:00') },
+
+    // 劳动节
+    fixedHoliday('劳动节',5, 1, year),
+
+    // 情人节（每年 2 月 14 日）
+    fixedHoliday('情人节',2,14,year),
+
+    // 结婚纪念日（每年 6 月 21 日），在渲染时会额外显示“第 X 周年”
+    fixedHoliday('结婚纪念日', marriageMonth, marriageDay, year, {
+      isAnniversary:true,
+      anniversaryNumber // 供渲染时使用的数字
+    })
+  ];
 }
-function renderLogs(){
-  listDiv.innerHTML = '';
-  const dates = Object.keys(logs).sort((a,b)=> a<b?1:-1); // 最近排前
-  if (!dates.length){
-    const p=document.createElement('p');
-    p.textContent='暂无日志记录';
-    p.style.textAlign='center'; p.style.color='var(--c-title)';
-    listDiv.appendChild(p);
-    return;
+
+/* -------------------------------------------------------
+   2️⃣ 计算 “X月Y天” 差值（不考虑闰秒，仅月份/天数）
+   ------------------------------------------------------- */
+function monthDayDiff(now, target){
+  // 先算月份差
+  let years  = target.getFullYear() - now.getFullYear();
+  let months = target.getMonth()    - now.getMonth() + years*12;
+
+  // 再算天数差
+  let days = target.getDate() - now.getDate();
+
+  if (days < 0){
+    months--;
+    // 前一个月有多少天
+    const prevMonthLastDay = new Date(target.getFullYear(), target.getMonth(), 0).getDate();
+    days = prevMonthLastDay + days;
   }
-  dates.forEach(date=>{
-    const d = logs[date];
-    const card = document.createElement('div'); card.className='log-item';
-    const hdr = document.createElement('div'); hdr.className='log-header';
-    hdr.innerHTML=`<span class="log-date">${fmtDate(date)}</span>
-                  <span class="log-hours">工时：${d.hours ?? 0} 小时</span>`;
-    const workSec = document.createElement('div'); workSec.className='log-section';
-    workSec.innerHTML=`<strong>工作内容：</strong><p>${d.work||''}</p>`;
-    const persSec = document.createElement('div'); persSec.className='log-section';
-    persSec.innerHTML=`<strong>个人内容：</strong><p>${d.personal||''}</p>`;
-    const actions = document.createElement('div'); actions.className='log-actions';
-    const editBtn = document.createElement('button'); editBtn.textContent='编辑'; editBtn.dataset.date=date;
-    const delBtn  = document.createElement('button'); delBtn.textContent='删除'; delBtn.dataset.date=date;
-    actions.append(editBtn,delBtn);
-    card.append(hdr,workSec,persSec,actions);
-    listDiv.appendChild(card);
-  });
+  if (months < 0) months = 0;
+  return { months, days };
 }
 
-/* =========================================================
-   3️⃣ 保存日志（点击 “保存/更新”）
-   ========================================================= */
-function clearForm(){
-  dateInput.value = todayYMD;
-  hoursInput.value = '';
-  workInput.value = '';
-  personalInput.value = '';
-}
-function saveLog(){
-  const date = dateInput.value.trim();
-  if (!date){ alert('请选择日期'); return; }
-  const hours = parseFloat(hoursInput.value)||0;
-  const work = workInput.value.trim();
-  const personal = personalInput.value.trim();
-  if (!work){ alert('请填写“工作内容”。'); workInput.focus(); return; }
-
-  const payload = {date, hours, work, personal, savedAt:new Date().toISOString()};
-
-  // 若是编辑且改了日期，需要先删旧键
-  if (editingKey && editingKey!==PREFIX+date){
-    const oldDate = editingKey.slice(PREFIX.length);
-    delete logs[oldDate];
-  }
-
-  // 保存到内存并同步到 URL hash（不再写入 localStorage）
-  logs[date] = payload;
-
-  // 重置编辑状态
-  editingKey = null;
-  saveBtn.textContent = '保存';
-  clearForm();
-
-  // 保存到 URL 并更新 UI
-  saveLogsToHash();
-  loadLogs(); renderLogs();
-
-  // 不再自动写入本地 Excel（自动写入已禁用）
-  // triggerExcelWrite(payload);
-}
-saveBtn.addEventListener('click',saveLog);
-
-/* =========================================================
-   4️⃣ 编辑 / 删除（列表按钮）
-   ========================================================= */
-listDiv.addEventListener('click', e=>{
-  if (!e.target.matches('.log-actions button')) return;
-  const date = e.target.dataset.date;
-  if (e.target.textContent==='编辑'){
-    const d = logs[date];
-    editingKey = PREFIX+date;
-    dateInput.value    = d.date;
-    hoursInput.value   = d.hours ?? '';
-    workInput.value    = d.work ?? '';
-    personalInput.value= d.personal ?? '';
-    saveBtn.textContent = '更新';
-  }else{ // 删除
-    if (!confirm(`确定删除 ${fmtDate(date)} 的日志吗？`)) return;
-    delete logs[date];
-    if (editingKey===PREFIX+date){ editingKey=null; clearForm(); saveBtn.textContent='保存'; }
-    saveLogsToHash();
-    loadLogs(); renderLogs();
-  }
-});
-
-/* =========================================================
-   5️⃣ File System Access API（Chrome/Edge）实现
-   ========================================================= */
-const supportsFS = false; // 已禁用自动写入本地文件 — 使用 URL hash 保存
-const fileCard    = document.getElementById('file-access-card');
-const fallbackCard= document.getElementById('fallback-card');
-const chooseBtn   = document.getElementById('choose-file');
-const fileInfo    = document.getElementById('file-info');
-
-let fileHandle = null;   // 取得的 FileSystemFileHandle（将不使用）
-let workbook   = null;   // SheetJS 工作簿对象（仅用于手动导出）
-
-/* ----- 5.1 UI 显示/隐藏（禁用自动文件写入） ----- */
-fileCard.style.display    = 'none';
-fallbackCard.style.display= 'block';
-fileInfo.textContent = '已禁用本地文件写入，日志保存在页面 URL（hash）中。';
-
-/* ----- 5.2 IndexedDB 保存文件句柄（持久化） ----- */
-let idbDB = null;
-function openMetaDB(){
-  return new Promise((resolve,reject)=>{
-    const req = indexedDB.open('logMetaDB',1);
-    req.onupgradeneeded = e=> e.target.result.createObjectStore('meta');
-    req.onsuccess = e=> { idbDB=e.target.result; resolve(idbDB); };
-    req.onerror   = e=> reject(e.target.error);
-  });
-}
-async function saveHandleToDB(handle){
-  const db = idbDB || await openMetaDB();
-  const tx = db.transaction('meta','readwrite');
-  tx.objectStore('meta').put(handle,'excelHandle');
-  return tx.complete;
-}
-async function getHandleFromDB(){
-  const db = idbDB || await openMetaDB();
-  return new Promise((resolve,reject)=>{
-    const tx = db.transaction('meta','readonly');
-    const req = tx.objectStore('meta').get('excelHandle');
-    req.onsuccess = e=> resolve(e.target.result);
-    req.onerror   = e=> reject(e.target.error);
-  });
-}
-async function clearHandleInDB(){
-  const db = idbDB || await openMetaDB();
-  const tx = db.transaction('meta','readwrite');
-  tx.objectStore('meta').delete('excelHandle');
-  return tx.complete;
-}
-
-/* ----- 5.3 页面加载时检查是否已有持久化句柄 ----- */
-async function initFileHandleFromDB(){
-  try{
-    const handle = await getHandleFromDB();
-    if (!handle) return;                // 第一次使用，还没有句柄
-    const perm = await handle.queryPermission({mode:'readwrite'});
-    if (perm === 'granted'){
-      fileHandle = handle;
-      fileInfo.textContent = `已打开文件：${handle.name}`;
-      await loadWorkbookFromFile();    // 把文件内容读取进内存
-    }else{
-      // 权限失效，需要用户重新打开文件
-      fileInfo.textContent = '权限已失效，请重新打开/创建文件。';
-      await clearHandleInDB();
-    }
-  }catch(e){
-    console.warn('读取句柄失败',e);
-    fileInfo.textContent = '读取文件句柄出错，请重新打开文件。';
-  }
-}
-
-/* ----- 5.4 用户点击 “打开/创建 Excel” ----- */
-chooseBtn.addEventListener('click', async ()=>{
-  try{
-    const opts = {
-      types:[{
-        description:'Excel 工作簿',
-        accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx']}
-      }]
-    };
-    // Chrome 86+ 推荐使用 showSaveFilePicker（直接保存），旧版使用 showOpenFilePicker
-    if (window.showSaveFilePicker){
-      fileHandle = await window.showSaveFilePicker(opts);
-    }else{
-      const [h] = await window.showOpenFilePicker(opts);
-      fileHandle = h;
-    }
-    await saveHandleToDB(fileHandle); // 持久化句柄
-    fileInfo.textContent = `已打开文件：${fileHandle.name}`;
-    await loadWorkbookFromFile();      // 读取或创建工作簿
-  }catch(err){
-    console.error('打开文件失败',err);
-    if (err.name!=='AbortError'){
-      alert('打开/创建文件失败，请检查浏览器是否支持 File System Access API 并在安全上下文（HTTPS）下使用。');
-    }
-  }
-});
-
-/* ----- 5.5 读取工作簿（若文件为空则创建空工作簿） ----- */
-async function loadWorkbookFromFile(){
-  if (!fileHandle) return;
-  try{
-    const file = await fileHandle.getFile();
-    const buf  = await file.arrayBuffer();
-    if (buf.byteLength===0){
-      // 空文件 → 创建新工作簿，写入标题行
-      workbook = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet([['日期','工时','工作内容','个人内容','保存时间']]);
-      XLSX.utils.book_append_sheet(workbook,'日志',ws);
-    }else{
-      const data = new Uint8Array(buf);
-      workbook = XLSX.read(data,{type:'array'});
-    }
-  }catch(e){
-    console.warn('读取 Excel 失败，可能不是 .xlsx，重新创建工作簿',e);
-    workbook = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([['日期','工时','工作内容','个人内容','保存时间']]);
-    XLSX.utils.book_append_sheet(workbook,'日志',ws);
-  }
-}
-
-/* ----- 5.6 把单条日志追加到工作簿并写回文件 ----- */
-async function triggerExcelWrite(logObj){
-  if (!supportsFS || !fileHandle) return false;   // 不支持或未打开文件时直接返回
-
-  // 确保工作簿已在内存（首次写入时可能还未加载）
-  if (!workbook) await loadWorkbookFromFile();
-
-  const sheetName = workbook.SheetNames[0];
-  const ws        = workbook.Sheets[sheetName];
-
-  // 追加行（键名顺序必须跟标题行对应）
-  const newRow = {
-    日期: logObj.date,
-    工时: logObj.hours ?? '',
-    工作内容: logObj.work ?? '',
-    个人内容: logObj.personal ?? '',
-    保存时间: logObj.savedAt ?? new Date().toISOString()
-  };
-  XLSX.utils.sheet_add_json(ws, [newRow], {skipHeader:true, origin:-1}); // -1 == 追加到末尾
-
-  try{
-    const writable = await fileHandle.createWritable();
-    const wbout    = XLSX.write(workbook,{bookType:'xlsx',type:'array'});
-    await writable.write(new Uint8Array(wbout));
-    await writable.close();
-    console.log('✅ 日志已写入 Excel 文件');
-    return true;
-  }catch(err){
-    console.error('写入 Excel 失败',err);
-    fileInfo.textContent = '写入失败，请重新打开文件或检查权限。';
-    await clearHandleInDB();
-    fileHandle = null;
-    return false;
-  }
-}
-
-/* =========================================================
-   6️⃣ 回退方案 – 导出为 Excel（所有浏览器）
-   ========================================================= */
-const exportBtn = document.getElementById('export-xlsx');
-exportBtn.addEventListener('click', exportToExcelFallback);
-function exportToExcelFallback(){
-  const rows = Object.values(logs).map(item=>({
-    日期: item.date,
-    工时: item.hours ?? '',
-    工作内容: item.work ?? '',
-    个人内容: item.personal ?? '',
-    保存时间: item.savedAt ?? ''
-  }));
-  if (!rows.length){ alert('暂无日志可导出'); return; }
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, '日志');
-  const wbout = XLSX.write(wb,{bookType:'xlsx',type:'array'});
-  const blob = new Blob([wbout],{type:'application/octet-stream'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url;
+/* -------------------------------------------------------
+   3️⃣ 获取最近的六个尚未到来的事件（跨年自动向后查）
+   ------------------------------------------------------- */
+function getNextSixEvents(){
   const now = new Date();
-  const name = `日志_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); },0);
+  const thisYear = now.getFullYear();
+
+  // 向后检查三年（足够保证可以取到 6 条记录）
+  const yearsToCheck = [thisYear, thisYear+1, thisYear+2];
+  const all = [];
+
+  yearsToCheck.forEach(y => {
+    const list = eventsOfYear(y);
+    list.forEach(item => {
+      // 若日期无效则略过
+      if (!isNaN(item.date.getTime())) {
+        all.push(item);
+      } else {
+        console.warn(`年份 ${y} 的 ${item.name} 日期无效，已跳过`);
+      }
+    });
+  });
+
+  // 只保留 >= 当前时间的
+  const upcoming = all
+    .filter(item => item.date.getTime() >= now.getTime())
+    .sort((a,b) => a.date - b.date)   // 按时间正序
+    .slice(0,6);                       // 取前六条
+
+  return upcoming;
 }
 
-/* =========================================================
-   7️⃣ 页面首次加载
-   ========================================================= */
-loadLogs();
-renderLogs();
+/* -------------------------------------------------------
+   4️⃣ 渲染卡片（每分钟刷新一次）
+   ------------------------------------------------------- */
+const container = document.getElementById('event-cards');
+
+/* 用于把 Date 对象格式化为 “2025年1月1日” */
+function formatFullDate(date){
+  return date.toLocaleDateString('zh-CN',
+    { year:'numeric', month:'long', day:'numeric' });
+}
+
+/* 渲染函数 */
+function renderCards(){
+  container.innerHTML = '';
+  const events = getNextSixEvents();
+
+  // 若数据不足 6 条（例如年份表缺失），补占位卡片避免页面空白
+  const totalNeeded = 6;
+  const toRender = events.slice(0,totalNeeded);
+  while (toRender.length < totalNeeded) {
+    toRender.push({ name:'暂无事件', date:null });
+  }
+
+  const now = new Date();
+
+  toRender.forEach(ev => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    // ---- 标题 ----
+    const title = document.createElement('div');
+    title.className = 'card-title';
+    // 对结婚纪念日做特殊处理，加入“第X周年”提示
+    if (ev.isAnniversary && ev.date){
+      const annNum = ev.anniversaryNumber; // 已在对象里预先算好
+      title.textContent = `${ev.name}（第${annNum}周年）`;
+    }else{
+      title.textContent = ev.name || '--';
+    }
+    card.appendChild(title);
+
+    // ---- 日期 ----
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'card-date';
+    dateDiv.textContent = ev.date ? formatFullDate(ev.date) : '--';
+    card.appendChild(dateDiv);
+
+    // ---- 倒计时 ----
+    const value = document.createElement('div');
+    value.className = 'card-value';
+
+    if (!ev.date){
+      value.textContent = '--';
+    }else{
+      const diff = ev.date - now;
+      if (diff <= 0){
+        value.textContent = '已过去';
+        value.classList.add('past');
+      }else{
+        const {months, days} = monthDayDiff(now, ev.date);
+        value.textContent = `剩余 ${months}月${days}天`;
+      }
+    }
+    card.appendChild(value);
+    container.appendChild(card);
+  });
+}
+
+/* 首次渲染 */
+renderCards();
+/* 每 1 分钟（60000 ms）自动刷新 */
+setInterval(renderCards, 60000);
 </script>
+
 </body>
 </html>
